@@ -2,23 +2,58 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from .forms import EmployeeForm
-from .models import Employee
+from .models import Department, Employee
 
 
 @login_required
 def employee_list(request):
     employees = Employee.objects.select_related("department").all()
 
+    search = request.GET.get("search", "").strip()
+    department = request.GET.get("department", "").strip()
+    status = request.GET.get("status", "").strip()
+
+    if search:
+        employees = employees.filter(
+            employee_id__icontains=search
+        ) | employees.filter(
+            first_name__icontains=search
+        ) | employees.filter(
+            last_name__icontains=search
+        ) | employees.filter(
+            email__icontains=search
+        )
+
+    if department:
+        employees = employees.filter(
+            department_id=department
+        )
+
+    if status:
+        employees = employees.filter(
+            status=status
+        )
+
+    employees = employees.distinct()
+
+    departments = Department.objects.all().order_by("name")
+
     return render(
         request,
         "hr/employee_list.html",
-        {"employees": employees},
+        {
+            "employees": employees,
+            "departments": departments,
+            "search": search,
+            "selected_department": department,
+            "selected_status": status,
+            "employee_count": employees.count(),
+        },
     )
 
 
 @login_required
 def employee_create(request):
-
     if request.method == "POST":
         form = EmployeeForm(request.POST)
 
@@ -58,6 +93,7 @@ def employee_update(request, employee_id):
             "editing": True,
         },
     )
+
 
 @login_required
 def employee_delete(request, employee_id):
