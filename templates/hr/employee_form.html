@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartERP - Add Employee</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .navbar {
+            background: #1f2937;
+            color: white;
+            padding: 18px 30px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .role {
+            font-size: 13px;
+            color: #d1d5db;
+            margin-top: 4px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 220px;
+            background: white;
+            padding: 25px 15px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .sidebar a {
+            display: block;
+            text-decoration: none;
+            color: #374151;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar a:hover {
+            background: #f3f4f6;
+        }
+
+        .sidebar .active {
+            background: #e5e7eb;
+            font-weight: bold;
+        }
+
+        .content {
+            flex: 1;
+            padding: 35px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-header h2 {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+        }
+
+        .form-container {
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        label {
+            margin-bottom: 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            padding: 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            padding: 11px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .save-button {
+            background: #2563eb;
+            color: white;
+        }
+
+        .save-button:hover {
+            background: #1d4ed8;
+        }
+
+        .cancel-button {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="navbar">
+
+    <h1>SmartERP</h1>
+
+    <div class="user-info">
+
+        <strong>{{ user.username }}</strong>
+
+        <div class="role">
+            {{ user.profile.get_role_display }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <a href="/dashboard/">
+            Dashboard
+        </a>
+
+        <a href="/hr/employees/" class="active">
+            Employees
+        </a>
+
+        <a href="#">
+            Departments
+        </a>
+
+        <a href="#">
+            Inventory
+        </a>
+
+        <a href="#">
+            Sales
+        </a>
+
+        <a href="#">
+            Finance
+        </a>
+
+        <a href="#">
+            Reports
+        </a>
+
+    </aside>
+
+
+    <main class="content">
+
+        <div class="page-header">
+
+            {% if editing %}
+                <h2>Edit Employee</h2>
+            {% else %}
+                <h2>Add Employee</h2>
+            {% endif %}
+
+            <p>
+                {% if editing %}
+                    Update employee information.
+                {% else %}
+                    Create a new employee record.
+                {% endif %}
+            </p>
+
+        </div>
+
+
+        <div class="form-container">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="{{ form.employee_id.id_for_label }}">
+                            Employee ID
+                        </label>
+
+                        {{ form.employee_id }}
+
+                        {% for error in form.employee_id.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.first_name.id_for_label }}">
+                            First Name
+                        </label>
+
+                        {{ form.first_name }}
+
+                        {% for error in form.first_name.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.last_name.id_for_label }}">
+                            Last Name
+                        </label>
+
+                        {{ form.last_name }}
+
+                        {% for error in form.last_name.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.email.id_for_label }}">
+                            Email
+                        </label>
+
+                        {{ form.email }}
+
+                        {% for error in form.email.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.phone.id_for_label }}">
+                            Phone
+                        </label>
+
+                        {{ form.phone }}
+
+                        {% for error in form.phone.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.department.id_for_label }}">
+                            Department
+                        </label>
+
+                        {{ form.department }}
+
+                        {% for error in form.department.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.designation.id_for_label }}">
+                            Designation
+                        </label>
+
+                        {{ form.designation }}
+
+                        {% for error in form.designation.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.joining_date.id_for_label }}">
+                            Joining Date
+                        </label>
+
+                        {{ form.joining_date }}
+
+                        {% for error in form.joining_date.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.salary.id_for_label }}">
+                            Salary
+                        </label>
+
+                        {{ form.salary }}
+
+                        {% for error in form.salary.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.status.id_for_label }}">
+                            Status
+                        </label>
+
+                        {{ form.status }}
+
+                        {% for error in form.status.errors %}
+                            <div class="error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="buttons">
+
+                    <button
+                        type="submit"
+                        class="button save-button"
+                    >
+                        Save Employee
+                    </button>
+
+                    <a
+                        href="{% url 'employee_list' %}"
+                        class="button cancel-button"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

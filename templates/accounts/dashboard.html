@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartERP Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #1f2937;
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-info .role {
+            font-size: 13px;
+            color: #d1d5db;
+        }
+
+        .container {
+            padding: 35px;
+        }
+
+        .welcome {
+            margin-bottom: 30px;
+        }
+
+        .welcome h2 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .welcome p {
+            color: #6b7280;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h3 {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card .number {
+            font-size: 30px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <h1>SmartERP</h1>
+
+    <div class="user-info">
+        <strong>{{ user.username }}</strong>
+        <div class="role">{{ user.profile.get_role_display }}</div>
+    </div>
+
+</div>
+
+<div class="container">
+
+    <div class="welcome">
+        <h2>Welcome to SmartERP</h2>
+        <p>Your centralized enterprise management dashboard.</p>
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Employees</h3>
+            <div class="number">{{ employee_count }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Products</h3>
+            <div class="number">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Orders</h3>
+            <div class="number">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Revenue</h3>
+            <div class="number">₹0</div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
