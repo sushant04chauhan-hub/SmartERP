@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartERP - Inventory</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #6b7280;
+        }
+
+        .add-button {
+            background: #2563eb;
+            color: white;
+
+            padding: 11px 18px;
+
+            border-radius: 6px;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+        .table-container {
+            background: white;
+
+            border-radius: 10px;
+
+            overflow-x: auto;
+
+            box-shadow:
+                0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: left;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .low-stock {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .normal-stock {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <div class="header">
+
+        <div>
+
+            <h2>Inventory</h2>
+
+            <p class="subtitle">
+                Manage products and stock.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'product_create' %}"
+            class="add-button"
+        >
+            + Add Product
+        </a>
+
+    </div>
+
+
+    <div class="table-container">
+
+        {% if products %}
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Product Code</th>
+
+                        <th>Product</th>
+
+                        <th>Category</th>
+
+                        <th>Quantity</th>
+
+                        <th>Unit Price</th>
+
+                        <th>Stock Status</th>
+
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for product in products %}
+
+                        <tr>
+
+                            <td>
+                                {{ product.product_code }}
+                            </td>
+
+                            <td>
+                                {{ product.name }}
+                            </td>
+
+                            <td>
+                                {{ product.category }}
+                            </td>
+
+                            <td>
+                                {{ product.quantity }}
+                            </td>
+
+                            <td>
+                                ₹{{ product.unit_price }}
+                            </td>
+
+                            <td>
+
+                                {% if product.quantity <= product.reorder_level %}
+
+                                    <span class="low-stock">
+                                        Low Stock
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="normal-stock">
+                                        In Stock
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+                            <td>
+
+                                <a
+                                    href="{% url 'product_update' product.id %}"
+                                    style="
+                                        color: #2563eb;
+                                        text-decoration: none;
+                                        font-weight: bold;
+                                    "
+                                >
+                                    Edit
+                                </a>
+
+                                <span style="color: #d1d5db; margin: 0 8px;">
+                                    |
+                                </span>
+
+                                <a
+                                    href="{% url 'product_delete' product.id %}"
+                                    style="
+                                        color: #dc2626;
+                                        text-decoration: none;
+                                        font-weight: bold;
+                                    "
+                                >
+                                    Delete
+                                </a>
+
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="empty">
+
+                <h3>No products found</h3>
+
+                <p>
+                    Add your first product to the inventory.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
