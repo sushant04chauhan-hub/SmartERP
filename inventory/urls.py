@@ -5,6 +5,8 @@ from .views import (
     product_delete,
     product_list,
     product_update,
+    stock_movement_create,
+    stock_movement_history,
 )
 
 urlpatterns = [
@@ -31,6 +33,16 @@ urlpatterns = [
         "<int:product_id>/delete/",
         product_delete,
         name="product_delete",
+    ),
+    path(
+        "stock-movement/",
+        stock_movement_create,
+        name="stock_movement_create",
+    ),
+    path(
+        "stock-history/",
+        stock_movement_history,
+        name="stock_movement_history",
     ),
 
 ]

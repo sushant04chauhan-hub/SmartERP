@@ -104,6 +104,53 @@
             color: #6b7280;
         }
 
+        .filter-form {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            border-radius: 10px;
+            box-shadow:
+                0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-form input,
+        .filter-form select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-form input {
+            width: 260px;
+        }
+
+        .search-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-button:hover {
+            background: #1d4ed8;
+        }
+
+        .clear-button {
+            color: #374151;
+            background: #e5e7eb;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
     </style>
 
 </head>
@@ -121,11 +168,18 @@
             <h2>Inventory</h2>
 
             <p class="subtitle">
-                Manage products and stock.
+                Showing {{ product_count }} product{{ product_count|pluralize }}
             </p>
 
         </div>
 
+
+        <a
+            href="{% url 'stock_movement_create' %}"
+            class="add-button"
+        >
+            Stock In / Out
+        </a>
 
         <a
             href="{% url 'product_create' %}"
@@ -134,7 +188,89 @@
             + Add Product
         </a>
 
+        <a
+            href="{% url 'stock_movement_history' %}"
+            class="add-button"
+        >
+            Stock History
+        </a>
     </div>
+
+    <form method="get" class="filter-form">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search product..."
+            value="{{ search }}"
+        >
+
+
+        <select name="category">
+
+                <option value="">
+                    All Categories
+                </option>
+
+                {% for category_name in categories %}
+
+                    <option
+                        value="{{ category_name }}"
+                        {% if selected_category == category_name %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ category_name }}
+                    </option>
+
+                {% endfor %}
+
+        </select>
+
+
+        <select name="stock_status">
+
+            <option value="">
+                All Stock
+            </option>
+
+            <option
+                value="IN_STOCK"
+                {% if selected_stock_status == "IN_STOCK" %}
+                    selected
+                {% endif %}
+            >
+                In Stock
+            </option>
+
+            <option
+                value="LOW"
+                {% if selected_stock_status == "LOW" %}
+                    selected
+                {% endif %}
+            >
+                Low Stock
+            </option>
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="search-button"
+        >
+            Search
+        </button>
+
+
+        <a
+            href="{% url 'product_list' %}"
+            class="clear-button"
+        >
+            Clear
+        </a>
+
+    </form>
 
 
     <div class="table-container">

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartERP - Stock History</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+
+            background: #f4f6f8;
+
+            margin: 0;
+
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+        }
+
+        .back-button {
+            background: #e5e7eb;
+
+            color: #374151;
+
+            padding: 10px 16px;
+
+            border-radius: 6px;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+        .table-container {
+            background: white;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+
+            text-align: left;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+
+            font-size: 13px;
+
+            text-transform: uppercase;
+
+            color: #6b7280;
+        }
+
+        .in {
+            color: #15803d;
+
+            font-weight: bold;
+        }
+
+        .out {
+            color: #dc2626;
+
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+
+            padding: 40px;
+
+            color: #6b7280;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <div>
+
+            <h2>
+                Stock Movement History
+            </h2>
+
+            <p class="subtitle">
+                View all inventory stock transactions.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'product_list' %}"
+            class="back-button"
+        >
+            Back to Inventory
+        </a>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Product</th>
+
+                    <th>Type</th>
+
+                    <th>Quantity</th>
+
+                    <th>Note</th>
+
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for movement in movements %}
+
+                    <tr>
+
+                        <td>
+                            {{ movement.product.name }}
+                        </td>
+
+
+                        <td>
+
+                            {% if movement.movement_type == "IN" %}
+
+                                <span class="in">
+                                    Stock In
+                                </span>
+
+                            {% else %}
+
+                                <span class="out">
+                                    Stock Out
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {{ movement.quantity }}
+                        </td>
+
+
+                        <td>
+                            {{ movement.note|default:"—" }}
+                        </td>
+
+
+                        <td>
+                            {{ movement.created_at|date:"d M Y, h:i A" }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty"
+                        >
+                            No stock movements recorded yet.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
