@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartERP - Purchase Orders</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+        }
+
+        .back-button {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow:
+                0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #6b7280;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .pending {
+            color: #d97706;
+        }
+
+        .received {
+            color: #15803d;
+        }
+
+        .cancelled {
+            color: #dc2626;
+        }
+
+        .receive-button {
+            background: #2563eb;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <div>
+
+            <h2>
+                Purchase Orders
+            </h2>
+
+            <p class="subtitle">
+                Manage supplier purchase orders.
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'dashboard' %}"
+            class="back-button"
+        >
+            Dashboard
+        </a>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Order Number</th>
+
+                    <th>Supplier</th>
+
+                    <th>Items</th>
+
+                    <th>Date</th>
+
+                    <th>Status</th>
+
+                    <th>Total Amount</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for purchase_order in purchase_orders %}
+
+                    <tr>
+
+                        <td>
+                            {{ purchase_order.order_number }}
+                        </td>
+
+                        <td>
+                            {{ purchase_order.supplier.name }}
+                        </td>
+                        
+                        <td>
+                            {{ purchase_order.item_count }}
+                        </td>
+
+                        <td>
+                            {{ purchase_order.order_date }}
+                        </td>
+
+                        <td>
+
+                            {% if purchase_order.status == "PENDING" %}
+
+                                <span class="status pending">
+                                    Pending
+                                </span>
+
+                            {% elif purchase_order.status == "RECEIVED" %}
+
+                                <span class="status received">
+                                    Received
+                                </span>
+
+                            {% else %}
+
+                                <span class="status cancelled">
+                                    Cancelled
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            ₹{{ purchase_order.total_amount }}
+                        </td>
+
+                        <td>
+
+                            {% if purchase_order.status == "PENDING" %}
+
+                                <form
+                                    method="post"
+                                    action="{% url 'receive_purchase' purchase_order.id %}"
+                                    style="display: inline;"
+                                >
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="receive-button"
+                                        onclick="return confirm('Receive this purchase order and update inventory?');"
+                                    >
+                                        Receive Purchase
+                                    </button>
+
+                                </form>
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty"
+                        >
+                            No purchase orders found.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
