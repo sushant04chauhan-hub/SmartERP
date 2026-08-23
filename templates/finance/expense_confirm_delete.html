@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Expense - SmartERP</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111;
+        }
+
+        .container {
+            width: 55%;
+            margin: 70px auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 35px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 30px;
+        }
+
+        .warning {
+            font-size: 18px;
+            margin: 25px 0;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .delete-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 13px 22px;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background: #b02a37;
+        }
+
+        .cancel-button {
+            background: #e3e6eb;
+            color: #222;
+            padding: 13px 22px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .cancel-button:hover {
+            background: #d5d9df;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h1>Delete Expense</h1>
+
+            <p class="warning">
+                Are you sure you want to delete
+                <strong>{{ expense.title }}</strong>?
+            </p>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="actions">
+
+                    <button
+                        type="submit"
+                        class="delete-button"
+                    >
+                        Delete Expense
+                    </button>
+
+                    <a
+                        href="{% url 'expense_list' %}"
+                        class="cancel-button"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

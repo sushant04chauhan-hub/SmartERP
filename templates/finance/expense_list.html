@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expenses - SmartERP</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111;
+        }
+
+        .container {
+            width: 82%;
+            margin: 40px auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .button {
+            background: #2864dc;
+            color: white;
+            padding: 14px 22px;
+            text-decoration: none;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #1f54bd;
+        }
+
+        .back-button {
+            background: #e3e6eb;
+            color: #222;
+        }
+
+        .back-button:hover {
+            background: #d5d9df;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid #ddd;
+            font-size: 17px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+
+        .amount {
+            font-weight: bold;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+        .edit-button,
+
+        .delete-button {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .edit-button {
+            background: #2864dc;
+            color: white;
+            margin-right: 8px;
+        }
+
+        .edit-button:hover {
+            background: #1f54bd;
+        }
+
+        .delete-button {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-button:hover {
+            background: #b02a37;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <div>
+                <h1>Expense Management</h1>
+            </div>
+
+            <div class="buttons">
+
+                <a href="{% url 'expense_create' %}" class="button">
+                    + Add Expense
+                </a>
+
+                <a href="/dashboard/" class="button back-button">
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            {% if expenses %}
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for expense in expenses %}
+
+                            <tr>
+
+                                <td>
+                                    {{ expense.title }}
+                                </td>
+
+                                <td>
+                                    {{ expense.get_category_display }}
+                                </td>
+
+                                <td class="amount">
+                                    ₹{{ expense.amount }}
+                                </td>
+
+                                <td>
+                                    {{ expense.expense_date }}
+                                </td>
+
+                                <td>
+                                    {{ expense.description }}
+                                </td>
+                                
+                                <td>
+                                    <a href="{% url 'expense_edit' expense.id %}" class="edit-button">
+                                        Edit
+                                    </a>
+
+                                    <a href="{% url 'expense_delete' expense.id %}" class="delete-button">
+                                        Delete
+                                    </a>
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            {% else %}
+
+                <div class="empty">
+                    No expenses recorded yet.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+</html>

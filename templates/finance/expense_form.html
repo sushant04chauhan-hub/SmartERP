@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        {% if expense %}Edit Expense{% else %}Add Expense{% endif %} - SmartERP
+    </title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111;
+        }
+
+        .container {
+            width: 70%;
+            margin: 40px auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .back-button {
+            background: #e3e6eb;
+            color: #222;
+            padding: 14px 22px;
+            text-decoration: none;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .back-button:hover {
+            background: #d5d9df;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px;
+            border: 1px solid #d0d5dc;
+            border-radius: 7px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2864dc;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .save-button {
+            background: #2864dc;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-button:hover {
+            background: #1f54bd;
+        }
+
+        .cancel-button {
+            background: #e3e6eb;
+            color: #222;
+            padding: 14px 25px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .cancel-button:hover {
+            background: #d5d9df;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h1>
+                {% if expense %}
+                    Edit Expense
+                {% else %}
+                    Add Expense
+                {% endif %}
+            </h1>
+
+            <a href="{% url 'expense_list' %}" class="back-button">
+                Back to Expenses
+            </a>
+
+        </div>
+
+        <div class="card">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="title">Title</label>
+
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Enter expense title"
+                        value="{% if expense %}{{ expense.title }}{% endif %}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+
+                    <select
+                        id="category"
+                        name="category"
+                        required
+                    >
+                        <option value="">Select Category</option>
+
+                        <option value="OFFICE"
+                            {% if expense and expense.category == "OFFICE" %}selected{% endif %}>
+                            Office
+                        </option>
+
+                        <option value="UTILITIES"
+                            {% if expense and expense.category == "UTILITIES" %}selected{% endif %}>
+                            Utilities
+                        </option>
+
+                        <option value="TRAVEL"
+                            {% if expense and expense.category == "TRAVEL" %}selected{% endif %}>
+                            Travel
+                        </option>
+
+                        <option value="MAINTENANCE"
+                            {% if expense and expense.category == "MAINTENANCE" %}selected{% endif %}>
+                            Maintenance
+                        </option>
+
+                        <option value="SALARY"
+                            {% if expense and expense.category == "SALARY" %}selected{% endif %}>
+                            Salary
+                        </option>
+
+                        <option value="OTHER"
+                            {% if expense and expense.category == "OTHER" %}selected{% endif %}>
+                            Other
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+
+                    <input
+                        type="number"
+                        id="amount"
+                        name="amount"
+                        step="0.01"
+                        min="0"
+                        placeholder="Enter amount"
+                        value="{% if expense %}{{ expense.amount }}{% endif %}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="expense_date">Expense Date</label>
+
+                    <input
+                        type="date"
+                        id="expense_date"
+                        name="expense_date"
+                        value="{% if expense %}{{ expense.expense_date|date:'Y-m-d' }}{% endif %}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Enter expense description"
+                    >{% if expense %}{{ expense.description }}{% endif %}</textarea>
+                </div>
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="save-button"
+                    >
+                        {% if expense %}
+                            Update Expense
+                        {% else %}
+                            Save Expense
+                        {% endif %}
+                    </button>
+
+                    <a
+                        href="{% url 'expense_list' %}"
+                        class="cancel-button"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
