@@ -21,14 +21,18 @@ load_dotenv(BASE_DIR / ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-7^nw3jqorovr$0yb5m^z%n@qs0)1qed5$z44p5%%f!=y=--zwy'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not configured.")
 
-ALLOWED_HOSTS = []
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if host.strip()
+]
 
 # Application definition
 
@@ -117,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = os.getenv("TIME_ZONE", "Asia/Kolkata")
 
 USE_I18N = True
 
