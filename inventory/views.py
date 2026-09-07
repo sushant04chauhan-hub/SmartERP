@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from accounts.decorators import role_required
 from django.db import models, transaction
 from django.shortcuts import redirect, render
 
@@ -6,7 +7,7 @@ from .forms import ProductForm, StockMovementForm
 from .models import Product, StockMovement
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def product_list(request):
 
     products = Product.objects.all().order_by("name")
@@ -60,7 +61,7 @@ def product_list(request):
             "product_count": products.count(),
         },
     )
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def product_create(request):
 
     if request.method == "POST":
@@ -84,7 +85,7 @@ def product_create(request):
         },
     )
 
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def product_update(request, product_id):
 
     product = Product.objects.get(id=product_id)
@@ -117,7 +118,7 @@ def product_update(request, product_id):
     )
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def product_delete(request, product_id):
 
     product = Product.objects.get(id=product_id)
@@ -136,7 +137,7 @@ def product_delete(request, product_id):
         },
     )
 
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def stock_movement_create(request):
 
     if request.method == "POST":
@@ -192,7 +193,7 @@ def stock_movement_create(request):
         },
     )
 
-@login_required
+@role_required("ADMIN", "MANAGER", "INVENTORY")
 def stock_movement_history(request):
 
     movements = StockMovement.objects.select_related(

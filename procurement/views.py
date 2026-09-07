@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from accounts.decorators import role_required
 from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -6,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import PurchaseOrder
 from inventory.models import StockMovement
 
-@login_required
+@role_required("ADMIN","MANAGER","PROCUREMENT",)
 def receive_purchase(request, purchase_order_id):
 
     purchase_order = get_object_or_404(
@@ -44,7 +45,7 @@ def receive_purchase(request, purchase_order_id):
 
     return redirect("purchase_order_list")
 
-@login_required
+@role_required("ADMIN","MANAGER","PROCUREMENT",)
 def purchase_order_list(request):
 
     purchase_orders = PurchaseOrder.objects.select_related(

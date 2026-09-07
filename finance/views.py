@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
+from accounts.decorators import role_required
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .models import Expense
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "FINANCE")
 def expense_list(request):
 
     expenses = Expense.objects.all().order_by(
@@ -20,7 +21,7 @@ def expense_list(request):
     )
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "FINANCE")
 def expense_create(request):
 
     if request.method == "POST":
@@ -41,7 +42,7 @@ def expense_create(request):
     )
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "FINANCE")
 def expense_edit(request, pk):
 
     expense = get_object_or_404(Expense, pk=pk)
@@ -67,7 +68,7 @@ def expense_edit(request, pk):
     )
 
 
-@login_required
+@role_required("ADMIN", "MANAGER", "FINANCE")
 def expense_delete(request, pk):
 
     expense = get_object_or_404(Expense, pk=pk)

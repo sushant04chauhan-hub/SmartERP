@@ -9,6 +9,7 @@ class UserProfile(models.Model):
         ("MANAGER", "Manager"),
         ("HR", "HR"),
         ("INVENTORY", "Inventory"),
+        ("PROCUREMENT", "Procurement"),
         ("SALES", "Sales"),
         ("FINANCE", "Finance"),
         ("EMPLOYEE", "Employee"),
