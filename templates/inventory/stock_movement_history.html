@@ -170,6 +170,10 @@
                     <th>Type</th>
 
                     <th>Quantity</th>
+                    
+                    <th>Reference</th>
+                    
+                    <th>Created By</th>
 
                     <th>Note</th>
 
@@ -193,19 +197,7 @@
 
                         <td>
 
-                            {% if movement.movement_type == "IN" %}
-
-                                <span class="in">
-                                    Stock In
-                                </span>
-
-                            {% else %}
-
-                                <span class="out">
-                                    Stock Out
-                                </span>
-
-                            {% endif %}
+                            {{ movement.get_movement_type_display }}
 
                         </td>
 
@@ -214,6 +206,17 @@
                             {{ movement.quantity }}
                         </td>
 
+                        <td>
+                            {{ movement.reference|default:"—" }}
+                        </td>
+                        
+                        <td>
+                            {% if movement.created_by %}
+                                {{ movement.created_by.username }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
 
                         <td>
                             {{ movement.note|default:"—" }}

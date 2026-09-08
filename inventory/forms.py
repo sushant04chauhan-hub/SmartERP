@@ -13,9 +13,11 @@ class ProductForm(forms.ModelForm):
             "name",
             "category",
             "description",
-            "quantity",
-            "unit_price",
+            "purchase_price",
+            "selling_price",
             "reorder_level",
+            "safety_stock",
+            "unit",
         ]
 
         widgets = {
@@ -28,6 +30,14 @@ class ProductForm(forms.ModelForm):
 
 class StockMovementForm(forms.ModelForm):
 
+    movement_type = forms.ChoiceField(
+        choices=[
+            ("ADJUSTMENT_IN", "Adjustment In"),
+            ("ADJUSTMENT_OUT", "Adjustment Out"),
+        ],
+        label="Adjustment Type",
+    )
+
     class Meta:
         model = StockMovement
 
@@ -35,13 +45,19 @@ class StockMovementForm(forms.ModelForm):
             "product",
             "movement_type",
             "quantity",
+            "reference",
             "note",
         ]
 
         widgets = {
+            "reference": forms.TextInput(
+                attrs={
+                    "placeholder": "Optional reference",
+                }
+            ),
             "note": forms.TextInput(
                 attrs={
-                    "placeholder": "Optional note",
+                    "placeholder": "Reason for adjustment",
                 }
             ),
         }

@@ -27,7 +27,7 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1400px;
             margin: auto;
         }
 
@@ -178,7 +178,7 @@
             href="{% url 'stock_movement_create' %}"
             class="add-button"
         >
-            Stock In / Out
+            Adjust Stock
         </a>
 
         <a
@@ -289,9 +289,17 @@
 
                         <th>Category</th>
 
-                        <th>Quantity</th>
+                        <th>Current Stock</th>
 
-                        <th>Unit Price</th>
+                        <th>Purchase Price</th>
+
+                        <th>Selling Price</th>
+
+                        <th>Reorder Level</th>
+
+                        <th>Safety Stock</th>
+
+                        <th>Unit</th>
 
                         <th>Stock Status</th>
 
@@ -325,25 +333,49 @@
                             </td>
 
                             <td>
-                                ₹{{ product.unit_price }}
+                                {% if product.purchase_price is not None %}
+                                    ₹{{ product.purchase_price }}
+                                {% else %}
+                                    -
+                                {% endif %}
                             </td>
 
                             <td>
+                                {% if product.selling_price is not None %}
+                                    ₹{{ product.selling_price }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
 
+                            <td>
+                                {{ product.reorder_level }}
+                            </td>
+
+                            <td>
+                                {{ product.safety_stock }}
+                            </td>
+
+                            <td>
+                                {{ product.get_unit_display }}
+                            </td>
+
+                            <td>
+                            
                                 {% if product.quantity <= product.reorder_level %}
-
+                            
                                     <span class="low-stock">
                                         Low Stock
                                     </span>
-
+                                
                                 {% else %}
-
+                                
                                     <span class="normal-stock">
                                         In Stock
                                     </span>
-
+                                
                                 {% endif %}
-
+                                
                             </td>
                             <td>
 

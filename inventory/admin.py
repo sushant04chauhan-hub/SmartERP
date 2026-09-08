@@ -10,12 +10,16 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "category",
         "quantity",
-        "unit_price",
+        "purchase_price",
+        "selling_price",
         "reorder_level",
+        "safety_stock",
+        "unit",
     )
 
     list_filter = (
         "category",
+        "unit",
     )
 
     search_fields = (

@@ -1,10 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from accounts.decorators import role_required
-from django.db import models, transaction
+from django.db import models
 from django.shortcuts import redirect, render
 
 from .forms import ProductForm, StockMovementForm
 from .models import Product, StockMovement
+from .services import apply_stock_movement
 
 
 @role_required("ADMIN", "MANAGER", "INVENTORY")
@@ -137,7 +139,11 @@ def product_delete(request, product_id):
         },
     )
 
-@role_required("ADMIN", "MANAGER", "INVENTORY")
+@role_required(
+    "ADMIN",
+    "MANAGER",
+    "INVENTORY",
+)
 def stock_movement_create(request):
 
     if request.method == "POST":
@@ -146,40 +152,32 @@ def stock_movement_create(request):
 
         if form.is_valid():
 
-            movement = form.save(commit=False)
+            try:
+                apply_stock_movement(
+                    product=form.cleaned_data["product"],
+                    movement_type=form.cleaned_data["movement_type"],
+                    quantity=form.cleaned_data["quantity"],
+                    user=request.user,
+                    reference=form.cleaned_data.get(
+                        "reference",
+                        "",
+                    ),
+                    note=form.cleaned_data.get(
+                        "note",
+                        "",
+                    ),
+                )
 
-            product = movement.product
-
-            if movement.movement_type == "OUT":
-
-                if movement.quantity > product.quantity:
-
-                    form.add_error(
-                        "quantity",
-                        "Stock Out quantity cannot be greater than current stock."
-                    )
-
-                else:
-
-                    with transaction.atomic():
-
-                        product.quantity -= movement.quantity
-                        product.save()
-
-                        movement.save()
-
-                    return redirect("product_list")
+            except ValidationError as error:
+                form.add_error(
+                    None,
+                    error,
+                )
 
             else:
-
-                with transaction.atomic():
-
-                    product.quantity += movement.quantity
-                    product.save()
-
-                    movement.save()
-
-                return redirect("product_list")
+                return redirect(
+                    "product_list"
+                )
 
     else:
 
@@ -197,7 +195,8 @@ def stock_movement_create(request):
 def stock_movement_history(request):
 
     movements = StockMovement.objects.select_related(
-        "product"
+        "product",
+        "created_by",
     ).order_by(
         "-created_at"
     )

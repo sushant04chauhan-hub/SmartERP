@@ -1,47 +1,66 @@
-from django.contrib.auth.decorators import login_required
-from accounts.decorators import role_required
+from django.contrib import messages
 from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import PurchaseOrder
-from inventory.models import StockMovement
+from accounts.decorators import role_required
+from inventory.services import apply_stock_movement
 
-@role_required("ADMIN","MANAGER","PROCUREMENT",)
+from .models import PurchaseOrder
+
+@role_required(
+    "ADMIN",
+    "MANAGER",
+    "PROCUREMENT",
+)
+@transaction.atomic
 def receive_purchase(request, purchase_order_id):
 
     purchase_order = get_object_or_404(
-        PurchaseOrder,
-        id=purchase_order_id
+        PurchaseOrder.objects.prefetch_related(
+            "items__product"
+        ),
+        id=purchase_order_id,
     )
 
-    if request.method == "POST":
-
-        if purchase_order.status != "PENDING":
-            return redirect("purchase_order_list")
-
-        with transaction.atomic():
-
-            for item in purchase_order.items.select_related("product"):
-
-                product = item.product
-
-                product.quantity += item.quantity
-
-                product.save()
-
-                StockMovement.objects.create(
-                    product=product,
-                    movement_type="IN",
-                    quantity=item.quantity,
-                    note=f"Purchase Order {purchase_order.order_number}",
-                )
-
-            purchase_order.status = "RECEIVED"
-
-            purchase_order.save()
-
+    if request.method != "POST":
         return redirect("purchase_order_list")
+
+    if purchase_order.status == "RECEIVED":
+        messages.error(
+            request,
+            "This purchase order has already been received.",
+        )
+        return redirect("purchase_order_list")
+
+    if purchase_order.status != "PENDING":
+        messages.error(
+            request,
+            "Only pending purchase orders can be received.",
+        )
+        return redirect("purchase_order_list")
+
+    for item in purchase_order.items.all():
+
+        apply_stock_movement(
+            product=item.product,
+            movement_type="PURCHASE",
+            quantity=item.quantity,
+            user=request.user,
+            reference=purchase_order.order_number,
+            note="Stock received from purchase order",
+        )
+
+    purchase_order.status = "RECEIVED"
+
+    purchase_order.save(
+        update_fields=["status"]
+    )
+
+    messages.success(
+        request,
+        "Purchase order received successfully.",
+    )
 
     return redirect("purchase_order_list")
 
