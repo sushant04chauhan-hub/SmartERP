@@ -50,7 +50,7 @@ class PurchaseReceivingTests(TestCase):
         self.purchase_order = PurchaseOrder.objects.create(
             supplier=self.supplier,
             order_number="PO-TEST-001",
-            status="PENDING",
+            status="ORDERED",
             total_amount=Decimal("500.00"),
         )
 

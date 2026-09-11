@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -25,6 +26,10 @@ class Supplier(models.Model):
         blank=True
     )
 
+    is_active = models.BooleanField(
+        default=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
@@ -39,15 +44,34 @@ class Supplier(models.Model):
 class PurchaseOrder(models.Model):
 
     STATUS_CHOICES = [
-        ("PENDING", "Pending"),
+        ("DRAFT", "Draft"),
+        ("APPROVED", "Approved"),
+        ("ORDERED", "Ordered"),
+        ("PARTIALLY_RECEIVED", "Partially Received"),
         ("RECEIVED", "Received"),
         ("CANCELLED", "Cancelled"),
     ]
 
     supplier = models.ForeignKey(
         Supplier,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="purchase_orders"
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_orders_created"
+    )
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_orders_approved"
     )
 
     order_number = models.CharField(
@@ -59,10 +83,20 @@ class PurchaseOrder(models.Model):
         auto_now_add=True
     )
 
+    expected_delivery_date = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    received_date = models.DateField(
+        null=True,
+        blank=True
+    )
+
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=STATUS_CHOICES,
-        default="PENDING"
+        default="DRAFT"
     )
 
     total_amount = models.DecimalField(
@@ -86,7 +120,6 @@ class PurchaseOrder(models.Model):
     def __str__(self):
         return f"{self.order_number} - {self.supplier.name}"
 
-        return self.quantity * self.unit_price
 
 class PurchaseOrderItem(models.Model):
 
