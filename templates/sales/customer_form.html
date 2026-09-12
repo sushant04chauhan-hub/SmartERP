@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+
+        SmartERP -
+
+        {% if editing %}
+            Edit Customer
+        {% else %}
+            Add Customer
+        {% endif %}
+
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .save-button {
+            background: #2563eb;
+            color: white;
+        }
+
+        .cancel-button {
+            background: #6b7280;
+            color: white;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>
+
+        {% if editing %}
+            Edit Customer
+        {% else %}
+            Add Customer
+        {% endif %}
+
+    </h2>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {% if form.non_field_errors %}
+
+            <div class="error">
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+        {% endif %}
+
+
+        {% for field in form %}
+
+            <div class="field">
+
+                <label
+                    for="{{ field.id_for_label }}"
+                >
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+
+                    <div class="error">
+
+                        {{ field.errors }}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <div class="buttons">
+
+            <button
+                type="submit"
+                class="button save-button"
+            >
+
+                {% if editing %}
+                    Save Changes
+                {% else %}
+                    Add Customer
+                {% endif %}
+
+            </button>
+
+
+            <a
+                href="{% url 'customer_list' %}"
+                class="button cancel-button"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+
+</html>

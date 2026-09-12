@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        SmartERP -
+        {% if editing %}
+            Edit Sales Order
+        {% else %}
+            Create Sales Order
+        {% endif %}
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+        }
+
+        .item {
+            background: #f9fafb;
+            padding: 18px;
+            border-radius: 7px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .save-button {
+            background: #2563eb;
+            color: white;
+        }
+
+        .cancel-button {
+            background: #6b7280;
+            color: white;
+        }
+
+        .add-item-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .remove-item-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>
+
+        {% if editing %}
+            Edit Sales Order
+        {% else %}
+            Create Sales Order
+        {% endif %}
+
+    </h2>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {% if form.non_field_errors %}
+
+            <div class="error">
+                {{ form.non_field_errors }}
+            </div>
+
+        {% endif %}
+
+
+        {% for field in form %}
+
+            <div class="field">
+
+                <label
+                    for="{{ field.id_for_label }}"
+                >
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+
+                    <div class="error">
+                        {{ field.errors }}
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <h3>
+            Sales Order Items
+        </h3>
+
+
+        {{ formset.management_form }}
+
+
+        {% if formset.non_form_errors %}
+
+            <div class="error">
+                {{ formset.non_form_errors }}
+            </div>
+
+        {% endif %}
+
+
+        <div id="item-form-container">
+        
+            {% for item_form in formset %}
+        
+                <div class="item item-form">
+                
+                    {{ item_form.id }}
+                
+                    <div class="field">
+                    
+                        <label>
+                            Product
+                        </label>
+                    
+                        {{ item_form.product }}
+                    
+                        {% if item_form.product.errors %}
+                    
+                            <div class="error">
+                                {{ item_form.product.errors }}
+                            </div>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                
+                    <div class="field">
+                    
+                        <label>
+                            Quantity
+                        </label>
+                    
+                        {{ item_form.quantity }}
+                    
+                        {% if item_form.quantity.errors %}
+                    
+                            <div class="error">
+                                {{ item_form.quantity.errors }}
+                            </div>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                
+                    <div class="field">
+                    
+                        <label>
+                            Unit Price
+                        </label>
+                    
+                        {{ item_form.unit_price }}
+                    
+                        {% if item_form.unit_price.errors %}
+                    
+                            <div class="error">
+                                {{ item_form.unit_price.errors }}
+                            </div>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                
+                    <div style="display: none;">
+                        {{ item_form.DELETE }}
+                    </div>
+                
+                
+                    <button
+                        type="button"
+                        class="remove-item-button"
+                    >
+                        Remove Item
+                    </button>
+                
+                </div>
+            
+            {% endfor %}
+            
+        </div>
+
+        <button
+            type="button"
+            id="add-item-button"
+            class="add-item-button"
+        >
+            + Add Another Item
+        </button>
+
+        <div
+            id="empty-item-form"
+            style="display: none;"
+        >
+
+            <div class="item item-form">
+            
+                {{ formset.empty_form.id }}
+            
+                <div class="field">
+                
+                    <label>
+                        Product
+                    </label>
+                
+                    {{ formset.empty_form.product }}
+                
+                </div>
+            
+            
+                <div class="field">
+                
+                    <label>
+                        Quantity
+                    </label>
+                
+                    {{ formset.empty_form.quantity }}
+                
+                </div>
+            
+            
+                <div class="field">
+                
+                    <label>
+                        Unit Price
+                    </label>
+                
+                    {{ formset.empty_form.unit_price }}
+                
+                </div>
+            
+            
+                <div style="display: none;">
+                    {{ formset.empty_form.DELETE }}
+                </div>
+            
+            
+                <button
+                    type="button"
+                    class="remove-item-button"
+                >
+                    Remove Item
+                </button>
+            
+            </div>
+        
+        </div>
+        <div class="buttons">
+
+            <button
+                type="submit"
+                class="button save-button"
+            >
+                    
+                {% if editing %}
+                    Save Changes
+                {% else %}
+                    Create Sales Order
+                {% endif %}
+                    
+            </button>
+
+            <a
+                href="{% url 'sales_order_list' %}"
+                class="button cancel-button"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+{{ product_price_map|json_script:"product-price-data" }}
+
+
+<script>
+
+    const productPrices = JSON.parse(
+        document.getElementById(
+            "product-price-data"
+        ).textContent
+    );
+
+
+    const formContainer =
+        document.getElementById(
+            "item-form-container"
+        );
+
+
+    const addButton =
+        document.getElementById(
+            "add-item-button"
+        );
+
+
+    const emptyFormContainer =
+        document.getElementById(
+            "empty-item-form"
+        );
+
+
+    const totalForms =
+        document.getElementById(
+            "id_{{ formset.prefix }}-TOTAL_FORMS"
+        );
+
+
+    function fillSellingPrice(
+        productSelect
+    ) {
+
+        const itemForm =
+            productSelect.closest(
+                ".item-form"
+            );
+
+        if (!itemForm) {
+            return;
+        }
+
+
+        const unitPriceInput =
+            itemForm.querySelector(
+                'input[name$="-unit_price"]'
+            );
+
+        if (!unitPriceInput) {
+            return;
+        }
+
+
+        const productId =
+            productSelect.value;
+
+
+        if (
+            productId
+            && productPrices[productId]
+        ) {
+
+            unitPriceInput.value =
+                productPrices[productId];
+
+        } else {
+
+            unitPriceInput.value = "";
+
+        }
+    }
+
+
+    addButton.addEventListener(
+        "click",
+        function () {
+
+            const formIndex =
+                parseInt(
+                    totalForms.value
+                );
+
+
+            const newFormHtml =
+                emptyFormContainer
+                    .innerHTML
+                    .replace(
+                        /__prefix__/g,
+                        formIndex
+                    );
+
+
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
+
+
+            wrapper.innerHTML =
+                newFormHtml.trim();
+
+
+            const newForm =
+                wrapper.firstElementChild;
+
+
+            formContainer.appendChild(
+                newForm
+            );
+
+
+            totalForms.value =
+                formIndex + 1;
+        }
+    );
+
+
+    formContainer.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                !event.target.classList.contains(
+                    "remove-item-button"
+                )
+            ) {
+                return;
+            }
+
+
+            const itemForm =
+                event.target.closest(
+                    ".item-form"
+                );
+
+
+            const deleteInput =
+                itemForm.querySelector(
+                    'input[name$="-DELETE"]'
+                );
+
+
+            if (deleteInput) {
+
+                deleteInput.checked = true;
+
+                itemForm.style.display =
+                    "none";
+            }
+        }
+    );
+
+
+    formContainer.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'select[name$="-product"]'
+                )
+            ) {
+
+                fillSellingPrice(
+                    event.target
+                );
+            }
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

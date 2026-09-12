@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        SmartERP - Sales Orders
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 9px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .create-button {
+            background: #2563eb;
+        }
+
+        .customer-button {
+            background: #059669;
+        }
+
+        .dashboard-button {
+            background: #4b5563;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .draft {
+            color: #6b7280;
+        }
+
+        .confirmed {
+            color: #2563eb;
+        }
+
+        .completed {
+            color: #059669;
+        }
+
+        .cancelled {
+            color: #dc2626;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 5px;
+        }
+
+        .edit-button {
+            background: #f59e0b;
+            color: white;
+        }
+                
+        .actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .actions form {
+            margin: 0;
+        }
+        
+        .action-button {
+            border: none;
+            padding: 9px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .confirm-button {
+            background: #2563eb;
+        }
+        
+        .cancel-order-button {
+            background: #dc2626;
+        }
+
+        .complete-button {
+            background: #059669;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h2>
+            Sales Orders
+        </h2>
+
+        <div class="header-actions">
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="button dashboard-button"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{% url 'customer_list' %}"
+                class="button customer-button"
+            >
+                Customers
+            </a>
+
+            <a
+                href="{% url 'sales_order_create' %}"
+                class="button create-button"
+            >
+                + Create Sales Order
+            </a>
+
+        </div>
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <table>
+
+        <thead>
+
+        <tr>
+
+            <th>
+                Order Number
+            </th>
+
+            <th>
+                Customer
+            </th>
+
+            <th>
+                Status
+            </th>
+
+            <th>
+                Items
+            </th>
+
+            <th>
+                Total
+            </th>
+
+            <th>
+                Order Date
+            </th>
+
+            <th>
+                Created By
+            </th>
+            <th>
+                Actions
+            </th>
+
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% for sales_order in sales_orders %}
+
+            <tr>
+
+                <td>
+                    {{ sales_order.order_number }}
+                </td>
+
+                <td>
+                    {{ sales_order.customer.name }}
+                </td>
+
+                <td>
+
+                    <span class="status {{ sales_order.status|lower }}">
+                        {{ sales_order.get_status_display }}
+                    </span>
+
+                </td>
+
+                <td>
+                    {{ sales_order.item_count }}
+                </td>
+
+                <td>
+                    ₹{{ sales_order.total_amount }}
+                </td>
+
+                <td>
+                    {{ sales_order.order_date }}
+                </td>
+
+                <td>
+
+                    {% if sales_order.created_by %}
+
+                        {{ sales_order.created_by.username }}
+
+                    {% else %}
+
+                        -
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+                
+                    <div class="actions">
+                    
+                        {% if sales_order.status == "DRAFT" %}
+                    
+                            <a
+                                href="{% url 'sales_order_edit' sales_order.id %}"
+                                class="button edit-button"
+                            >
+                                Edit
+                            </a>
+                        
+                        
+                            <form
+                                method="post"
+                                action="{% url 'confirm_order' sales_order.id %}"
+                            >
+                        
+                                {% csrf_token %}
+                        
+                                <button
+                                    type="submit"
+                                    class="action-button confirm-button"
+                                >
+                                    Confirm
+                                </button>
+                            
+                            </form>
+                        
+                        
+                            <form
+                                method="post"
+                                action="{% url 'cancel_order' sales_order.id %}"
+                            >
+                        
+                                {% csrf_token %}
+                        
+                                <button
+                                    type="submit"
+                                    class="action-button cancel-order-button"
+                                >
+                                    Cancel
+                                </button>
+                            
+                            </form>
+                        
+                        {% elif sales_order.status == "CONFIRMED" %}
+
+                            <form
+                                method="post"
+                                action="{% url 'complete_order' sales_order.id %}"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="action-button complete-button"
+                                >
+                                    Complete
+                                </button>
+                            
+                            </form>
+                        
+                        
+                            <form
+                                method="post"
+                                action="{% url 'cancel_order' sales_order.id %}"
+                            >
+                        
+                                {% csrf_token %}
+                        
+                                <button
+                                    type="submit"
+                                    class="action-button cancel-order-button"
+                                >
+                                    Cancel
+                                </button>
+                            
+                            </form>
+                        
+                        
+                        {% else %}
+                        
+                            -
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                </td>
+                
+            </tr>
+
+        {% empty %}
+
+            <tr>
+
+                <td colspan="8">
+                    No sales orders found.
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</body>
+
+</html>
