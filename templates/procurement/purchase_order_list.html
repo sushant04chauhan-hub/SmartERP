@@ -146,6 +146,12 @@
             color: #6b7280;
         }
 
+        .edit-button {
+            background: #4b5563;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
     </style>
 
 </head>
@@ -169,15 +175,26 @@
 
         </div>
 
-        <a
-            href="{% url 'dashboard' %}"
-            class="back-button"
-        >
-            Dashboard
-        </a>
+        <div>
+
+            <a
+                href="{% url 'purchase_order_create' %}"
+                class="back-button"
+            >
+                + Create Purchase Order
+            </a>
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="back-button"
+                style="margin-left: 8px;"
+            >
+                Dashboard
+            </a>
+
+        </div>
 
     </div>
-
 
     <div class="table-container">
 
@@ -243,6 +260,13 @@
                         <td>
 
                             {% if purchase_order.status == "DRAFT" %}
+
+                                <a
+                                    href="{% url 'purchase_order_edit' purchase_order.id %}"
+                                    class="action-button edit-button"
+                                >
+                                    Edit
+                                </a>
 
                                 {% if can_approve %}
 

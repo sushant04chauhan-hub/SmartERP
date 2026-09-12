@@ -1,11 +1,17 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from inventory.models import Product, StockMovement
 
+from .forms import (
+    PurchaseOrderForm,
+    PurchaseOrderItemFormSet,
+)
 from .models import (
     PurchaseOrder,
     PurchaseOrderItem,
@@ -13,11 +19,14 @@ from .models import (
 )
 
 
-class PurchaseReceivingTests(TestCase):
+class ProcurementTests(TestCase):
 
     def setUp(self):
 
-        self.user = get_user_model().objects.create_user(
+        User = get_user_model()
+
+        # Procurement user
+        self.user = User.objects.create_user(
             username="procurement_test_user",
             password="test-password-123",
         )
@@ -25,14 +34,21 @@ class PurchaseReceivingTests(TestCase):
         self.user.profile.role = "PROCUREMENT"
         self.user.profile.save()
 
-        self.client.force_login(
-            self.user
+        # Manager used for approval testing
+        self.manager = User.objects.create_user(
+            username="manager_test_user",
+            password="test-password-123",
         )
+
+        self.manager.profile.role = "MANAGER"
+        self.manager.profile.save()
 
         self.supplier = Supplier.objects.create(
             name="Test Supplier",
             contact_person="Test Contact",
             email="supplier@example.com",
+            phone="9999999999",
+            is_active=True,
         )
 
         self.product = Product.objects.create(
@@ -47,26 +63,471 @@ class PurchaseReceivingTests(TestCase):
             unit="PCS",
         )
 
-        self.purchase_order = PurchaseOrder.objects.create(
+        self.second_product = Product.objects.create(
+            product_code="PROC-P002",
+            name="Second Procurement Product",
+            category="Testing",
+            quantity=20,
+            purchase_price=Decimal("150.00"),
+            selling_price=Decimal("220.00"),
+            reorder_level=5,
+            safety_stock=2,
+            unit="PCS",
+        )
+
+        self.expected_date = (
+            timezone.localdate()
+            + timedelta(days=7)
+        )
+
+    def create_purchase_order(
+        self,
+        *,
+        order_number="PO-TEST-001",
+        status="DRAFT",
+    ):
+
+        purchase_order = PurchaseOrder.objects.create(
             supplier=self.supplier,
-            order_number="PO-TEST-001",
-            status="ORDERED",
+            created_by=self.user,
+            order_number=order_number,
+            expected_delivery_date=self.expected_date,
+            status=status,
             total_amount=Decimal("500.00"),
         )
 
         PurchaseOrderItem.objects.create(
-            purchase_order=self.purchase_order,
+            purchase_order=purchase_order,
             product=self.product,
             quantity=5,
             unit_price=Decimal("100.00"),
         )
 
+        return purchase_order
+
+    def get_formset_prefix(self, purchase_order=None):
+
+        if purchase_order is None:
+            purchase_order = PurchaseOrder()
+
+        formset = PurchaseOrderItemFormSet(
+            instance=purchase_order
+        )
+
+        return formset.prefix
+
+    # --------------------------------------------------
+    # CREATE PURCHASE ORDER
+    # --------------------------------------------------
+
+    def test_create_purchase_order_with_multiple_items(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        prefix = self.get_formset_prefix()
+
+        response = self.client.post(
+            reverse(
+                "purchase_order_create"
+            ),
+            {
+                "order_number": "PO-CREATE-001",
+                "supplier": self.supplier.id,
+                "expected_delivery_date":
+                    self.expected_date.isoformat(),
+                "notes": "Automated creation test",
+
+                f"{prefix}-TOTAL_FORMS": "2",
+                f"{prefix}-INITIAL_FORMS": "0",
+                f"{prefix}-MIN_NUM_FORMS": "1",
+                f"{prefix}-MAX_NUM_FORMS": "1000",
+
+                f"{prefix}-0-product":
+                    self.product.id,
+                f"{prefix}-0-quantity":
+                    "2",
+                f"{prefix}-0-unit_price":
+                    "100.00",
+
+                f"{prefix}-1-product":
+                    self.second_product.id,
+                f"{prefix}-1-quantity":
+                    "2",
+                f"{prefix}-1-unit_price":
+                    "150.00",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order = (
+            PurchaseOrder.objects.get(
+                order_number="PO-CREATE-001"
+            )
+        )
+
+        self.assertEqual(
+            purchase_order.status,
+            "DRAFT",
+        )
+
+        self.assertEqual(
+            purchase_order.created_by,
+            self.user,
+        )
+
+        self.assertEqual(
+            purchase_order.items.count(),
+            2,
+        )
+
+        # 2 × 100 + 2 × 150 = 500
+        self.assertEqual(
+            purchase_order.total_amount,
+            Decimal("500.00"),
+        )
+
+    # --------------------------------------------------
+    # DUPLICATE PRODUCT VALIDATION
+    # --------------------------------------------------
+
+    def test_duplicate_product_is_rejected(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        prefix = self.get_formset_prefix()
+
+        response = self.client.post(
+            reverse(
+                "purchase_order_create"
+            ),
+            {
+                "order_number":
+                    "PO-DUPLICATE-001",
+
+                "supplier":
+                    self.supplier.id,
+
+                "expected_delivery_date":
+                    self.expected_date.isoformat(),
+
+                "notes":
+                    "Duplicate test",
+
+                f"{prefix}-TOTAL_FORMS": "2",
+                f"{prefix}-INITIAL_FORMS": "0",
+                f"{prefix}-MIN_NUM_FORMS": "1",
+                f"{prefix}-MAX_NUM_FORMS": "1000",
+
+                f"{prefix}-0-product":
+                    self.product.id,
+                f"{prefix}-0-quantity":
+                    "5",
+                f"{prefix}-0-unit_price":
+                    "100.00",
+
+                f"{prefix}-1-product":
+                    self.product.id,
+                f"{prefix}-1-quantity":
+                    "3",
+                f"{prefix}-1-unit_price":
+                    "100.00",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertFalse(
+            PurchaseOrder.objects.filter(
+                order_number=
+                    "PO-DUPLICATE-001"
+            ).exists()
+        )
+
+        self.assertContains(
+            response,
+            "The same product cannot be added "
+            "more than once to a purchase order.",
+        )
+
+    # --------------------------------------------------
+    # INACTIVE SUPPLIER
+    # --------------------------------------------------
+
+    def test_inactive_supplier_not_available_for_new_po(self):
+
+        inactive_supplier = Supplier.objects.create(
+            name="Inactive Supplier",
+            is_active=False,
+        )
+
+        form = PurchaseOrderForm()
+
+        supplier_ids = list(
+            form.fields[
+                "supplier"
+            ].queryset.values_list(
+                "id",
+                flat=True,
+            )
+        )
+
+        self.assertIn(
+            self.supplier.id,
+            supplier_ids,
+        )
+
+        self.assertNotIn(
+            inactive_supplier.id,
+            supplier_ids,
+        )
+
+    # --------------------------------------------------
+    # EDIT DRAFT PURCHASE ORDER
+    # --------------------------------------------------
+
+    def test_draft_purchase_order_can_be_edited(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number="PO-EDIT-001",
+                status="DRAFT",
+            )
+        )
+
+        item = purchase_order.items.get()
+
+        prefix = self.get_formset_prefix(
+            purchase_order
+        )
+
+        response = self.client.post(
+            reverse(
+                "purchase_order_edit",
+                args=[purchase_order.id],
+            ),
+            {
+                "order_number":
+                    purchase_order.order_number,
+
+                "supplier":
+                    self.supplier.id,
+
+                "expected_delivery_date":
+                    self.expected_date.isoformat(),
+
+                "notes":
+                    "Edited order",
+
+                f"{prefix}-TOTAL_FORMS": "1",
+                f"{prefix}-INITIAL_FORMS": "1",
+                f"{prefix}-MIN_NUM_FORMS": "1",
+                f"{prefix}-MAX_NUM_FORMS": "1000",
+
+                f"{prefix}-0-id":
+                    item.id,
+
+                f"{prefix}-0-product":
+                    self.product.id,
+
+                f"{prefix}-0-quantity":
+                    "7",
+
+                f"{prefix}-0-unit_price":
+                    "100.00",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order.refresh_from_db()
+
+        item.refresh_from_db()
+
+        self.assertEqual(
+            item.quantity,
+            7,
+        )
+
+        self.assertEqual(
+            purchase_order.total_amount,
+            Decimal("700.00"),
+        )
+
+    # --------------------------------------------------
+    # APPROVED PO CANNOT BE EDITED
+    # --------------------------------------------------
+
+    def test_approved_purchase_order_cannot_be_edited(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-NO-EDIT-001",
+                status="APPROVED",
+            )
+        )
+
+        response = self.client.get(
+            reverse(
+                "purchase_order_edit",
+                args=[purchase_order.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "APPROVED",
+        )
+
+    # --------------------------------------------------
+    # APPROVAL
+    # --------------------------------------------------
+
+    def test_manager_can_approve_purchase_order(self):
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-APPROVE-001",
+                status="DRAFT",
+            )
+        )
+
+        self.client.force_login(
+            self.manager
+        )
+
+        response = self.client.post(
+            reverse(
+                "approve_purchase",
+                args=[purchase_order.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "APPROVED",
+        )
+
+        self.assertEqual(
+            purchase_order.approved_by,
+            self.manager,
+        )
+
+    # --------------------------------------------------
+    # ORDERING
+    # --------------------------------------------------
+
+    def test_only_approved_po_can_be_marked_ordered(self):
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-ORDER-001",
+                status="DRAFT",
+            )
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        # Invalid transition:
+        # DRAFT -> ORDERED
+        self.client.post(
+            reverse(
+                "mark_purchase_order",
+                args=[purchase_order.id],
+            )
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "DRAFT",
+        )
+
+        # Valid transition:
+        # APPROVED -> ORDERED
+        purchase_order.status = "APPROVED"
+
+        purchase_order.save(
+            update_fields=["status"]
+        )
+
+        self.client.post(
+            reverse(
+                "mark_purchase_order",
+                args=[purchase_order.id],
+            )
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "ORDERED",
+        )
+
+    # --------------------------------------------------
+    # RECEIVING
+    # --------------------------------------------------
+
     def test_receiving_purchase_order_increases_stock(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-RECEIVE-001",
+                status="ORDERED",
+            )
+        )
 
         response = self.client.post(
             reverse(
                 "receive_purchase",
-                args=[self.purchase_order.id],
+                args=[purchase_order.id],
             )
         )
 
@@ -76,7 +537,8 @@ class PurchaseReceivingTests(TestCase):
         )
 
         self.product.refresh_from_db()
-        self.purchase_order.refresh_from_db()
+
+        purchase_order.refresh_from_db()
 
         self.assertEqual(
             self.product.quantity,
@@ -84,8 +546,13 @@ class PurchaseReceivingTests(TestCase):
         )
 
         self.assertEqual(
-            self.purchase_order.status,
+            purchase_order.status,
             "RECEIVED",
+        )
+
+        self.assertEqual(
+            purchase_order.received_date,
+            timezone.localdate(),
         )
 
         movement = StockMovement.objects.get(
@@ -100,7 +567,7 @@ class PurchaseReceivingTests(TestCase):
 
         self.assertEqual(
             movement.reference,
-            "PO-TEST-001",
+            "PO-RECEIVE-001",
         )
 
         self.assertEqual(
@@ -108,11 +575,27 @@ class PurchaseReceivingTests(TestCase):
             self.user,
         )
 
+    # --------------------------------------------------
+    # DUPLICATE RECEIVING
+    # --------------------------------------------------
+
     def test_purchase_order_cannot_be_received_twice(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-RECEIVE-TWICE-001",
+                status="ORDERED",
+            )
+        )
 
         url = reverse(
             "receive_purchase",
-            args=[self.purchase_order.id],
+            args=[purchase_order.id],
         )
 
         self.client.post(url)
@@ -139,4 +622,41 @@ class PurchaseReceivingTests(TestCase):
                 movement_type="PURCHASE",
             ).count(),
             1,
+        )
+
+    # --------------------------------------------------
+    # CANCELLATION
+    # --------------------------------------------------
+
+    def test_ordered_purchase_order_can_be_cancelled(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number=
+                    "PO-CANCEL-001",
+                status="ORDERED",
+            )
+        )
+
+        response = self.client.post(
+            reverse(
+                "cancel_purchase",
+                args=[purchase_order.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "CANCELLED",
         )

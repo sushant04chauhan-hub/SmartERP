@@ -1,4 +1,7 @@
 from django.contrib import messages
+from decimal import Decimal
+from inventory.models import Product
+from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,6 +15,10 @@ from .services import (
     cancel_purchase_order,
     mark_purchase_order_ordered,
     receive_purchase_order,
+)
+from .forms import (
+    PurchaseOrderForm,
+    PurchaseOrderItemFormSet,
 )
 
 
@@ -33,6 +40,206 @@ def show_validation_error(request, error):
     "MANAGER",
     "PROCUREMENT",
 )
+
+def purchase_order_create(request):
+
+    purchase_order = PurchaseOrder()
+
+    if request.method == "POST":
+
+        form = PurchaseOrderForm(
+            request.POST,
+            instance=purchase_order,
+        )
+
+        formset = PurchaseOrderItemFormSet(
+            request.POST,
+            instance=purchase_order,
+        )
+
+        if form.is_valid() and formset.is_valid():
+
+            with transaction.atomic():
+
+                purchase_order = form.save(
+                    commit=False
+                )
+
+                purchase_order.created_by = request.user
+                purchase_order.status = "DRAFT"
+                purchase_order.total_amount = Decimal(
+                    "0.00"
+                )
+
+                purchase_order.save()
+
+                formset.instance = purchase_order
+                formset.save()
+
+                total_amount = sum(
+                    (
+                        item.quantity * item.unit_price
+                        for item
+                        in purchase_order.items.all()
+                    ),
+                    Decimal("0.00"),
+                )
+
+                purchase_order.total_amount = total_amount
+
+                purchase_order.save(
+                    update_fields=[
+                        "total_amount",
+                        "updated_at",
+                    ]
+                )
+
+            messages.success(
+                request,
+                "Purchase order created successfully.",
+            )
+
+            return redirect(
+                "purchase_order_list"
+            )
+
+    else:
+
+        form = PurchaseOrderForm(
+            instance=purchase_order
+        )
+
+        formset = PurchaseOrderItemFormSet(
+            instance=purchase_order
+        )
+
+    product_price_map = {
+        str(product.id): (
+            str(product.purchase_price)
+            if product.purchase_price is not None
+            else ""
+        )
+        for product in Product.objects.only(
+            "id",
+            "purchase_price",
+        )
+    }
+
+    return render(
+        request,
+        "procurement/purchase_order_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "product_price_map": product_price_map,
+        },
+    )
+
+@role_required(
+    "ADMIN",
+    "MANAGER",
+    "PROCUREMENT",
+)
+
+def purchase_order_edit(request, purchase_order_id):
+
+    purchase_order = get_object_or_404(
+        PurchaseOrder,
+        id=purchase_order_id,
+    )
+
+    if purchase_order.status != "DRAFT":
+
+        messages.error(
+            request,
+            "Only draft purchase orders can be edited.",
+        )
+
+        return redirect(
+            "purchase_order_list"
+        )
+
+    if request.method == "POST":
+
+        form = PurchaseOrderForm(
+            request.POST,
+            instance=purchase_order,
+        )
+
+        formset = PurchaseOrderItemFormSet(
+            request.POST,
+            instance=purchase_order,
+        )
+
+        if form.is_valid() and formset.is_valid():
+
+            with transaction.atomic():
+
+                purchase_order = form.save()
+
+                formset.save()
+
+                total_amount = sum(
+                    (
+                        item.quantity * item.unit_price
+                        for item
+                        in purchase_order.items.all()
+                    ),
+                    Decimal("0.00"),
+                )
+
+                purchase_order.total_amount = total_amount
+
+                purchase_order.save(
+                    update_fields=[
+                        "total_amount",
+                        "updated_at",
+                    ]
+                )
+
+            messages.success(
+                request,
+                "Purchase order updated successfully.",
+            )
+
+            return redirect(
+                "purchase_order_list"
+            )
+
+    else:
+
+        form = PurchaseOrderForm(
+            instance=purchase_order,
+        )
+
+        formset = PurchaseOrderItemFormSet(
+            instance=purchase_order,
+        )
+
+    product_price_map = {
+        str(product.id): (
+            str(product.purchase_price)
+            if product.purchase_price is not None
+            else ""
+        )
+        for product in Product.objects.only(
+            "id",
+            "purchase_price",
+        )
+    }
+
+    return render(
+        request,
+        "procurement/purchase_order_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "product_price_map": product_price_map,
+            "editing": True,
+            "purchase_order": purchase_order,
+        },
+    )
+
 def purchase_order_list(request):
 
     purchase_orders = (

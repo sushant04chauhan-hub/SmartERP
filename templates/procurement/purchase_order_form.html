@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        SmartERP -
+        {% if editing %}
+            Edit Purchase Order
+        {% else %}
+            Create Purchase Order
+        {% endif %}
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow:
+                0 3px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+        }
+
+        .item {
+            position: relative;
+            background: #f9fafb;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-radius: 7px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .add-item-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .remove-item-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .errorlist {
+            color: #dc2626;
+        }
+
+        .buttons {
+            margin-top: 25px;
+        }
+
+        .save-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .cancel-button {
+            margin-left: 12px;
+            color: #374151;
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+    <h2>
+    
+        {% if editing %}
+            Edit Purchase Order
+        {% else %}
+            Create Purchase Order
+        {% endif %}
+    
+    </h2>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+
+                <div class="field">
+
+                    <label>
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {{ field.errors }}
+
+                </div>
+
+            {% endfor %}
+
+
+            <h3>
+                Purchase Order Items
+            </h3>
+
+            {{ formset.management_form }}
+
+            {{ formset.non_form_errors }}
+
+
+            <div id="item-form-container">
+            
+                {% for item_form in formset %}
+            
+                    <div class="item item-form">
+                    
+                        {{ item_form.id }}
+                    
+                        {{ item_form.non_field_errors }}
+                    
+                        <div class="field">
+                        
+                            <label>
+                                Product
+                            </label>
+                        
+                            {{ item_form.product }}
+                        
+                            {{ item_form.product.errors }}
+                        
+                        </div>
+                    
+                        <div class="field">
+                        
+                            <label>
+                                Quantity
+                            </label>
+                        
+                            {{ item_form.quantity }}
+                        
+                            {{ item_form.quantity.errors }}
+                        
+                        </div>
+                    
+                        <div class="field">
+                        
+                            <label>
+                                Unit Price
+                            </label>
+                        
+                            {{ item_form.unit_price }}
+                        
+                            {{ item_form.unit_price.errors }}
+                        
+                        </div>
+                    
+                    
+                        <div style="display: none;">
+                            {{ item_form.DELETE }}
+                        </div>
+                    
+                    
+                        <button
+                            type="button"
+                            class="remove-item-button"
+                        >
+                            Remove Item
+                        </button>
+                    
+                    </div>
+                
+                {% endfor %}
+                
+            </div>
+
+            <div
+                id="empty-item-form"
+                style="display: none;"
+            >
+
+                <div class="item item-form">
+                
+                    {{ formset.empty_form.id }}
+                
+                    {{ formset.empty_form.non_field_errors }}
+                
+                    <div class="field">
+                    
+                        <label>
+                            Product
+                        </label>
+                    
+                        {{ formset.empty_form.product }}
+                    
+                        {{ formset.empty_form.product.errors }}
+                    
+                    </div>
+                
+                    <div class="field">
+                    
+                        <label>
+                            Quantity
+                        </label>
+                    
+                        {{ formset.empty_form.quantity }}
+                    
+                        {{ formset.empty_form.quantity.errors }}
+                    
+                    </div>
+                
+                    <div class="field">
+                    
+                        <label>
+                            Unit Price
+                        </label>
+                    
+                        {{ formset.empty_form.unit_price }}
+                    
+                        {{ formset.empty_form.unit_price.errors }}
+                    
+                    </div>
+                
+                
+                    <div style="display: none;">
+                        {{ formset.empty_form.DELETE }}
+                    </div>
+                
+                
+                    <button
+                        type="button"
+                        class="remove-item-button"
+                    >
+                        Remove Item
+                    </button>
+                
+                </div>
+            
+            </div>
+
+            <button
+                type="button"
+                id="add-item-button"
+                class="add-item-button"
+            >
+                + Add Another Item
+            </button>
+
+            <div class="buttons">
+
+                <button
+                    type="submit"
+                    class="save-button"
+                >
+                            
+                    {% if editing %}
+                        Save Changes
+                    {% else %}
+                        Create Purchase Order
+                    {% endif %}
+                            
+                </button>
+
+                <a
+                    href="{% url 'purchase_order_list' %}"
+                    class="cancel-button"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{{ product_price_map|json_script:"product-price-data" }}
+
+<script>
+    
+    const productPrices = JSON.parse(
+        document.getElementById(
+            "product-price-data"
+        ).textContent
+    );
+
+    const formContainer = document.getElementById(
+        "item-form-container"
+    );
+
+    const addButton = document.getElementById(
+        "add-item-button"
+    );
+
+    const emptyFormContainer = document.getElementById(
+        "empty-item-form"
+    );
+
+    const totalForms = document.getElementById(
+        "id_{{ formset.prefix }}-TOTAL_FORMS"
+    );
+
+    function fillPurchasePrice(productSelect) {
+
+        const itemForm = productSelect.closest(
+            ".item-form"
+        );
+
+        if (!itemForm) {
+            return;
+        }
+
+        const unitPriceInput = itemForm.querySelector(
+            'input[name$="-unit_price"]'
+        );
+
+        if (!unitPriceInput) {
+            return;
+        }
+
+        const productId = productSelect.value;
+
+        if (
+            productId
+            && productPrices[productId]
+        ) {
+            unitPriceInput.value =
+                productPrices[productId];
+        } else {
+            unitPriceInput.value = "";
+        }
+    }
+    addButton.addEventListener(
+        "click",
+        function () {
+
+            const formIndex = parseInt(
+                totalForms.value
+            );
+
+            const newFormHtml =
+                emptyFormContainer.innerHTML.replace(
+                    /__prefix__/g,
+                    formIndex
+                );
+
+            const wrapper = document.createElement(
+                "div"
+            );
+
+            wrapper.innerHTML = newFormHtml.trim();
+
+            const newForm = wrapper.firstElementChild;
+
+            formContainer.appendChild(
+                newForm
+            );
+
+            totalForms.value =
+                formIndex + 1;
+        }
+    );
+
+
+    formContainer.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                !event.target.classList.contains(
+                    "remove-item-button"
+                )
+            ) {
+                return;
+            }
+
+            const itemForm = event.target.closest(
+                ".item-form"
+            );
+
+            const deleteInput = itemForm.querySelector(
+                'input[name$="-DELETE"]'
+            );
+
+            if (deleteInput) {
+
+                deleteInput.checked = true;
+
+                itemForm.style.display = "none";
+            }
+        }
+    );
+
+    formContainer.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'select[name$="-product"]'
+                )
+            ) {
+                fillPurchasePrice(
+                    event.target
+                );
+            }
+        }
+    );
+    
+</script>
+
+</body>
+
+</html>
