@@ -138,6 +138,87 @@
             background: #059669;
         }
 
+        .stats {
+            display: grid;
+            grid-template-columns:
+                repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 18px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .filter-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+            padding: 18px;
+            margin-bottom: 25px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .filter-field {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .clear-button {
+            background: #6b7280;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+        }        
+
     </style>
 
 </head>
@@ -179,6 +260,159 @@
 
     </div>
 
+    <div class="stats">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Total Sales Orders
+            </div>
+
+            <div class="stat-value">
+                {{ total_orders }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Completed Orders
+            </div>
+
+            <div class="stat-value">
+                {{ completed_order_count }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Completed Revenue
+            </div>
+
+            <div class="stat-value">
+                ₹{{ completed_revenue }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Units Sold
+            </div>
+
+            <div class="stat-value">
+                {{ units_sold }}
+            </div>
+
+        </div>
+
+    </div>
+
+    <form
+        method="get"
+        class="filter-form"
+    >
+
+        <div class="filter-field">
+
+            <label for="search">
+                Search
+            </label>
+
+            <input
+                type="text"
+                id="search"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Order number or customer name"
+            >
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label for="status">
+                Status
+            </label>
+
+            <select
+                id="status"
+                name="status"
+            >
+
+                <option value="">
+                    All Statuses
+                </option>
+
+                <option
+                    value="DRAFT"
+                    {% if status_filter == "DRAFT" %}
+                        selected
+                    {% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="CONFIRMED"
+                    {% if status_filter == "CONFIRMED" %}
+                        selected
+                    {% endif %}
+                >
+                    Confirmed
+                </option>
+
+                <option
+                    value="COMPLETED"
+                    {% if status_filter == "COMPLETED" %}
+                        selected
+                    {% endif %}
+                >
+                    Completed
+                </option>
+
+                <option
+                    value="CANCELLED"
+                    {% if status_filter == "CANCELLED" %}
+                        selected
+                    {% endif %}
+                >
+                    Cancelled
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                type="submit"
+                class="filter-button"
+            >
+                Search / Filter
+            </button>
+
+
+            <a
+                href="{% url 'sales_order_list' %}"
+                class="clear-button"
+            >
+                Clear
+            </a>
+
+        </div>
+
+    </form>
 
     {% if messages %}
 

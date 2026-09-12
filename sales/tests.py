@@ -817,3 +817,143 @@ class SalesTests(TestCase):
             self.product.quantity,
             8,
         )
+    # --------------------------------------------------
+    # SALES SEARCH
+    # --------------------------------------------------
+
+    def test_sales_order_search_by_order_number(self):
+    
+        self.create_sales_order(
+            order_number="SO-SEARCH-001",
+        )
+
+        self.create_sales_order(
+            order_number="SO-OTHER-001",
+        )
+
+        response = self.client.get(
+            reverse("sales_order_list"),
+            {
+                "q": "SEARCH",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            "SO-SEARCH-001",
+        )
+
+        self.assertNotContains(
+            response,
+            "SO-OTHER-001",
+        )
+
+
+    def test_sales_order_search_by_customer_name(self):
+    
+        self.create_sales_order(
+            order_number="SO-CUSTOMER-001",
+        )
+
+        response = self.client.get(
+            reverse("sales_order_list"),
+            {
+                "q": "Test Customer",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            "SO-CUSTOMER-001",
+        )
+
+
+    # --------------------------------------------------
+    # SALES STATUS FILTER
+    # --------------------------------------------------
+
+    def test_sales_order_status_filter(self):
+    
+        self.create_sales_order(
+            order_number="SO-DRAFT-FILTER",
+            status="DRAFT",
+        )
+
+        self.create_sales_order(
+            order_number="SO-COMPLETE-FILTER",
+            status="COMPLETED",
+        )
+
+        response = self.client.get(
+            reverse("sales_order_list"),
+            {
+                "status": "COMPLETED",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            "SO-COMPLETE-FILTER",
+        )
+
+        self.assertNotContains(
+            response,
+            "SO-DRAFT-FILTER",
+        )
+
+
+    # --------------------------------------------------
+    # SEARCH + FILTER TOGETHER
+    # --------------------------------------------------
+
+    def test_search_and_status_filter_work_together(self):
+    
+        matching_order = (
+            self.create_sales_order(
+                order_number="SO-MATCH-001",
+                status="COMPLETED",
+            )
+        )
+
+        self.create_sales_order(
+            order_number="SO-MATCH-002",
+            status="DRAFT",
+        )
+
+        response = self.client.get(
+            reverse("sales_order_list"),
+            {
+                "q": "MATCH",
+                "status": "COMPLETED",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            matching_order.order_number,
+        )
+
+        self.assertNotContains(
+            response,
+            "SO-MATCH-002",
+        )

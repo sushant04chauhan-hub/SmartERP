@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q, Sum
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -22,6 +22,7 @@ from .forms import (
 from .models import (
     Customer,
     SalesOrder,
+    SalesOrderItem,
 )
 
 from .services import (
@@ -208,6 +209,16 @@ def customer_toggle_status(
 )
 def sales_order_list(request):
 
+    search_query = request.GET.get(
+        "q",
+        "",
+    ).strip()
+
+    status_filter = request.GET.get(
+        "status",
+        "",
+    ).strip()
+
     sales_orders = (
         SalesOrder.objects
         .select_related(
@@ -219,19 +230,100 @@ def sales_order_list(request):
                 "items"
             )
         )
-        .order_by(
-            "-created_at"
+    )
+
+    if search_query:
+
+        sales_orders = sales_orders.filter(
+            Q(
+                order_number__icontains=
+                    search_query
+            )
+            |
+            Q(
+                customer__name__icontains=
+                    search_query
+            )
         )
+
+    valid_statuses = {
+        "DRAFT",
+        "CONFIRMED",
+        "COMPLETED",
+        "CANCELLED",
+    }
+
+    if status_filter in valid_statuses:
+
+        sales_orders = sales_orders.filter(
+            status=status_filter
+        )
+
+    sales_orders = sales_orders.order_by(
+        "-created_at"
+    )
+
+    completed_orders = (
+        SalesOrder.objects.filter(
+            status="COMPLETED"
+        )
+    )
+
+    total_orders = (
+        SalesOrder.objects.count()
+    )
+
+    completed_order_count = (
+        completed_orders.count()
+    )
+
+    completed_revenue = (
+        completed_orders.aggregate(
+            total=Sum(
+                "total_amount"
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    units_sold = (
+        SalesOrderItem.objects.filter(
+            sales_order__status="COMPLETED"
+        )
+        .aggregate(
+            total=Sum(
+                "quantity"
+            )
+        )["total"]
+        or 0
     )
 
     return render(
         request,
         "sales/sales_order_list.html",
         {
-            "sales_orders": sales_orders,
+            "sales_orders":
+                sales_orders,
+
+            "total_orders":
+                total_orders,
+
+            "completed_order_count":
+                completed_order_count,
+
+            "completed_revenue":
+                completed_revenue,
+
+            "units_sold":
+                units_sold,
+
+            "search_query":
+                search_query,
+
+            "status_filter":
+                status_filter,
         },
     )
-
 
 @role_required(
     "ADMIN",
