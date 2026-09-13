@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from inventory.models import Product
 from inventory.services import apply_stock_movement
+from finance.services import create_revenue_for_sales_order
 
 from .models import SalesOrder
 
@@ -181,4 +182,9 @@ def complete_sales_order(
         ]
     )
 
+    create_revenue_for_sales_order(
+        sales_order=sales_order,
+        user=user,
+    )
+    
     return sales_order

@@ -293,6 +293,15 @@
             color: #111;
         }
 
+        .revenue-section {
+            margin-top: 40px;
+        }
+        
+        .revenue-section h2 {
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
         @media (max-width: 1000px) {
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -456,6 +465,7 @@
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Reference</th>
+                            <th>Source</th>
                             <th>Status</th>
                             <th>Created By</th>
                             <th>Actions</th>
@@ -491,7 +501,16 @@
                                         -
                                     {% endif %}
                                 </td>
-                            
+
+                                <td>
+                                    {% if expense.purchase_order %}
+                                        Purchase Order:
+                                        {{ expense.purchase_order.order_number }}
+                                    {% else %}
+                                        Manual Expense
+                                    {% endif %}
+                                </td>
+
                                 <td>
                                 
                                     {% if expense.status == "PENDING" %}
@@ -605,6 +624,70 @@
                     </tbody>
 
                 </table>
+
+                <div class="revenue-section">
+                
+                    <h2>Sales Revenue</h2>
+                
+                    <table>
+                    
+                        <thead>
+                            <tr>
+                                <th>Sales Order</th>
+                                <th>Amount</th>
+                                <th>Revenue Date</th>
+                                <th>Reference</th>
+                                <th>Created By</th>
+                            </tr>
+                        </thead>
+                    
+                        <tbody>
+                        
+                            {% for revenue in revenues %}
+                        
+                                <tr>
+                                
+                                    <td>
+                                        {{ revenue.sales_order.order_number }}
+                                    </td>
+                                
+                                    <td class="amount">
+                                        ₹{{ revenue.amount }}
+                                    </td>
+                                
+                                    <td>
+                                        {{ revenue.revenue_date }}
+                                    </td>
+                                
+                                    <td>
+                                        {{ revenue.reference_number }}
+                                    </td>
+                                
+                                    <td>
+                                        {% if revenue.created_by %}
+                                            {{ revenue.created_by.username }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                
+                                </tr>
+                            
+                            {% empty %}
+                            
+                                <tr>
+                                    <td colspan="5">
+                                        No sales revenue recorded yet.
+                                    </td>
+                                </tr>
+                            
+                            {% endfor %}
+                            
+                        </tbody>
+                    
+                    </table>
+                
+                </div>
 
             {% else %}
 

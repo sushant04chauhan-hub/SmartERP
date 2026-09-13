@@ -10,6 +10,7 @@ class Expense(models.Model):
         ("TRAVEL", "Travel"),
         ("MAINTENANCE", "Maintenance"),
         ("SALARY", "Salary"),
+        ("PROCUREMENT", "Procurement"),
         ("OTHER", "Other"),
     ]
 
@@ -51,6 +52,14 @@ class Expense(models.Model):
     reference_number = models.CharField(
         max_length=100,
         blank=True
+    )
+
+    purchase_order = models.OneToOneField(
+        "procurement.PurchaseOrder",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="finance_expense",
     )
 
     status = models.CharField(
@@ -101,3 +110,44 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - ₹{self.amount}"
+
+class Revenue(models.Model):
+
+    sales_order = models.OneToOneField(
+        "sales.SalesOrder",
+        on_delete=models.PROTECT,
+        related_name="finance_revenue",
+    )
+
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+    )
+
+    revenue_date = models.DateField()
+
+    reference_number = models.CharField(
+        max_length=100,
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_revenues",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def __str__(self):
+        return (
+            f"{self.reference_number} - "
+            f"₹{self.amount}"
+        )

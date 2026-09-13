@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import Expense
+from .models import Expense, Revenue
 from .forms import ExpenseForm
 from django.db.models import Q, Sum
 
@@ -53,6 +53,14 @@ def expense_list(request):
         "reviewed_by",
     ).order_by("-expense_date", "-id")
 
+    revenues = Revenue.objects.select_related(
+        "sales_order",
+        "created_by",
+    ).order_by(
+        "-revenue_date",
+        "-id",
+    )
+
     search_query = request.GET.get(
         "q",
         "",
@@ -87,6 +95,7 @@ def expense_list(request):
 
     context = {
         "expenses": expenses,
+        "revenues": revenues,
         "search_query": search_query,
         "status_filter": status_filter,
         "category_filter": category_filter,

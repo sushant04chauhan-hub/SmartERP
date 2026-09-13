@@ -17,7 +17,7 @@ from .models import (
     PurchaseOrderItem,
     Supplier,
 )
-
+from finance.models import Expense
 
 class ProcurementTests(TestCase):
 
@@ -574,7 +574,71 @@ class ProcurementTests(TestCase):
             movement.created_by,
             self.user,
         )
+    def test_receiving_purchase_order_creates_finance_expense(self):
 
+        self.client.force_login(
+            self.user
+        )
+
+        purchase_order = (
+            self.create_purchase_order(
+                order_number="PO-FIN-001",
+                status="ORDERED",
+            )
+        )
+
+        response = self.client.post(
+            reverse(
+                "receive_purchase",
+                args=[purchase_order.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        purchase_order.refresh_from_db()
+
+        self.assertEqual(
+            purchase_order.status,
+            "RECEIVED",
+        )
+
+        expense = Expense.objects.get(
+            purchase_order=purchase_order,
+        )
+
+        self.assertEqual(
+            expense.category,
+            "PROCUREMENT",
+        )
+
+        self.assertEqual(
+            expense.amount,
+            purchase_order.total_amount,
+        )
+
+        self.assertEqual(
+            expense.reference_number,
+            purchase_order.order_number,
+        )
+
+        self.assertEqual(
+            expense.expense_date,
+            purchase_order.received_date,
+        )
+
+        self.assertEqual(
+            expense.status,
+            "PENDING",
+        )
+
+        self.assertEqual(
+            expense.created_by,
+            self.user,
+        )
     # --------------------------------------------------
     # DUPLICATE RECEIVING
     # --------------------------------------------------
@@ -620,6 +684,13 @@ class ProcurementTests(TestCase):
             StockMovement.objects.filter(
                 product=self.product,
                 movement_type="PURCHASE",
+            ).count(),
+            1,
+        )
+                        
+        self.assertEqual(
+            Expense.objects.filter(
+                purchase_order=purchase_order,
             ).count(),
             1,
         )

@@ -17,6 +17,7 @@ from .models import (
     SalesOrderItem,
 )
 
+from finance.models import Revenue
 
 class SalesTests(TestCase):
 
@@ -956,4 +957,62 @@ class SalesTests(TestCase):
         self.assertNotContains(
             response,
             "SO-MATCH-002",
+        )
+
+    def test_completing_sales_order_creates_finance_revenue(self):
+
+        sales_order = self.create_sales_order(
+            order_number="SO-FIN-001",
+            status="CONFIRMED",
+            quantity=3,
+        )
+
+        response = self.client.post(
+            reverse(
+                "complete_order",
+                args=[sales_order.id],
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        sales_order.refresh_from_db()
+
+        self.assertEqual(
+            sales_order.status,
+            "COMPLETED",
+        )
+
+        revenue = Revenue.objects.get(
+            sales_order=sales_order,
+        )
+
+        self.assertEqual(
+            revenue.amount,
+            sales_order.total_amount,
+        )
+
+        self.assertEqual(
+            revenue.reference_number,
+            sales_order.order_number,
+        )
+
+        self.assertEqual(
+            revenue.revenue_date,
+            sales_order.completed_date,
+        )
+
+        self.assertEqual(
+            revenue.created_by,
+            self.user,
+        )
+
+        self.assertEqual(
+            Revenue.objects.filter(
+                sales_order=sales_order,
+            ).count(),
+            1,
         )

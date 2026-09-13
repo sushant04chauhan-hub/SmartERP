@@ -3,6 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from inventory.services import apply_stock_movement
+from finance.services import create_expense_for_purchase_order
 
 from .models import PurchaseOrder
 
@@ -105,6 +106,11 @@ def receive_purchase_order(*, purchase_order, user):
             "received_date",
             "updated_at",
         ]
+    )
+
+    create_expense_for_purchase_order(
+        purchase_order=purchase_order,
+        user=user,
     )
 
     return purchase_order
