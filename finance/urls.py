@@ -1,6 +1,14 @@
 from django.urls import path
 
-from .views import expense_create, expense_list, expense_edit, expense_delete
+from .views import (
+    expense_approve,
+    expense_create,
+    expense_delete,
+    expense_edit,
+    expense_list,
+    expense_mark_paid,
+    expense_reject,
+)
 
 
 urlpatterns = [
@@ -25,5 +33,23 @@ urlpatterns = [
         "<int:pk>/delete/",
         expense_delete,
         name="expense_delete",
+    ),
+
+    path(
+        "<int:pk>/approve/",
+        expense_approve,
+        name="expense_approve",
+    ),
+
+    path(
+        "<int:pk>/reject/",
+        expense_reject,
+        name="expense_reject",
+    ),
+
+    path(
+        "<int:pk>/mark-paid/",
+        expense_mark_paid,
+        name="expense_mark_paid",
     ),
 ]

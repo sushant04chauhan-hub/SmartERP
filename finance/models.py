@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+
 
 class Expense(models.Model):
 
@@ -8,6 +10,21 @@ class Expense(models.Model):
         ("TRAVEL", "Travel"),
         ("MAINTENANCE", "Maintenance"),
         ("SALARY", "Salary"),
+        ("OTHER", "Other"),
+    ]
+
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+        ("PAID", "Paid"),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ("CASH", "Cash"),
+        ("BANK_TRANSFER", "Bank Transfer"),
+        ("UPI", "UPI"),
+        ("CARD", "Card"),
         ("OTHER", "Other"),
     ]
 
@@ -28,6 +45,49 @@ class Expense(models.Model):
     expense_date = models.DateField()
 
     description = models.TextField(
+        blank=True
+    )
+
+    reference_number = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        blank=True
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_expenses"
+    )
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_expenses"
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    paid_at = models.DateTimeField(
+        null=True,
         blank=True
     )
 

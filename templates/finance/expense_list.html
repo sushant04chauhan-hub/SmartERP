@@ -118,6 +118,193 @@
         .delete-button:hover {
             background: #b02a37;
         }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .locked {
+            color: #777;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .approve-button,
+        .reject-button {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .approve-button {
+            background: #198754;
+            color: white;
+        }
+
+        .approve-button:hover {
+            background: #157347;
+        }
+
+        .reject-button {
+            background: #dc3545;
+            color: white;
+        }
+
+        .reject-button:hover {
+            background: #bb2d3b;
+        }
+
+        .payment-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .payment-select {
+            width: auto;
+            min-width: 150px;
+            padding: 7px 9px;
+            border: 1px solid #d0d5dc;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .paid-button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .paid-button:hover {
+            background: #0b5ed7;
+        }
+        
+        .filter-card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid #d0d5dc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-input {
+            min-width: 220px;
+        }
+
+        .filter-select {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .filter-button {
+            background: #2864dc;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .filter-button:hover {
+            background: #1f54bd;
+        }
+
+        .clear-button {
+            background: #e3e6eb;
+            color: #222;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #111;
+        }
+
+        @media (max-width: 1000px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
     </style>
 </head>
 
@@ -150,6 +337,116 @@
 
             {% if expenses %}
 
+            <div class="summary-grid">
+            
+                <div class="summary-card">
+                    <div class="summary-label">
+                        Total Paid
+                    </div>
+                
+                    <div class="summary-value">
+                        ₹{{ total_paid }}
+                    </div>
+                </div>
+            
+                <div class="summary-card">
+                    <div class="summary-label">
+                        Pending Approvals
+                    </div>
+                
+                    <div class="summary-value">
+                        {{ pending_count }}
+                    </div>
+                </div>
+            
+                <div class="summary-card">
+                    <div class="summary-label">
+                        Approved Awaiting Payment
+                    </div>
+                
+                    <div class="summary-value">
+                        ₹{{ approved_amount }}
+                    </div>
+                </div>
+            
+                <div class="summary-card">
+                    <div class="summary-label">
+                        Paid This Month
+                    </div>
+                
+                    <div class="summary-value">
+                        ₹{{ paid_this_month }}
+                    </div>
+                </div>
+            
+            </div>
+
+            <div class="filter-card">
+
+                <form method="get" class="filter-form">
+                
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="Search expenses..."
+                        value="{{ search_query }}"
+                        class="filter-input"
+                    >
+                
+                    <select
+                        name="status"
+                        class="filter-select"
+                    >
+                        <option value="">
+                            All Statuses
+                        </option>
+                    
+                        {% for value, label in status_choices %}
+                            <option
+                                value="{{ value }}"
+                                {% if status_filter == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                
+                    <select
+                        name="category"
+                        class="filter-select"
+                    >
+                        <option value="">
+                            All Categories
+                        </option>
+                    
+                        {% for value, label in category_choices %}
+                            <option
+                                value="{{ value }}"
+                                {% if category_filter == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                
+                    <button
+                        type="submit"
+                        class="filter-button"
+                    >
+                        Apply
+                    </button>
+                
+                    <a
+                        href="{% url 'expense_list' %}"
+                        class="clear-button"
+                    >
+                        Clear
+                    </a>
+                
+                </form>
+            
+            </div>
+
                 <table>
 
                     <thead>
@@ -158,7 +455,9 @@
                             <th>Category</th>
                             <th>Amount</th>
                             <th>Date</th>
-                            <th>Description</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                            <th>Created By</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -168,36 +467,137 @@
                         {% for expense in expenses %}
 
                             <tr>
-
+                            
                                 <td>
                                     {{ expense.title }}
                                 </td>
-
+                            
                                 <td>
                                     {{ expense.get_category_display }}
                                 </td>
-
+                            
                                 <td class="amount">
                                     ₹{{ expense.amount }}
                                 </td>
-
+                            
                                 <td>
                                     {{ expense.expense_date }}
                                 </td>
-
+                            
                                 <td>
-                                    {{ expense.description }}
+                                    {% if expense.reference_number %}
+                                        {{ expense.reference_number }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
+                            
+                                <td>
                                 
-                                <td>
-                                    <a href="{% url 'expense_edit' expense.id %}" class="edit-button">
-                                        Edit
-                                    </a>
+                                    {% if expense.status == "PENDING" %}
 
-                                    <a href="{% url 'expense_delete' expense.id %}" class="delete-button">
-                                        Delete
-                                    </a>
+                                        <a
+                                            href="{% url 'expense_edit' expense.id %}"
+                                            class="edit-button"
+                                        >
+                                            Edit
+                                        </a>
+                                    
+                                        <a
+                                            href="{% url 'expense_delete' expense.id %}"
+                                            class="delete-button"
+                                        >
+                                            Delete
+                                        </a>
+                                    
+                                        <form
+                                            method="post"
+                                            action="{% url 'expense_approve' expense.id %}"
+                                            style="display: inline;"
+                                        >
+                                            {% csrf_token %}
+                                    
+                                            <button
+                                                type="submit"
+                                                class="approve-button"
+                                            >
+                                                Approve
+                                            </button>
+                                        </form>
+                                    
+                                        <form
+                                            method="post"
+                                            action="{% url 'expense_reject' expense.id %}"
+                                            style="display: inline;"
+                                        >
+                                            {% csrf_token %}
+                                    
+                                            <button
+                                                type="submit"
+                                                class="reject-button"
+                                            >
+                                                Reject
+                                            </button>
+                                        </form>
+                                    
+                                    {% elif expense.status == "APPROVED" %}
+                                    
+                                        <form
+                                            method="post"
+                                            action="{% url 'expense_mark_paid' expense.id %}"
+                                            class="payment-form"
+                                        >
+                                            {% csrf_token %}
+                                    
+                                            <select
+                                                name="payment_method"
+                                                required
+                                                class="payment-select"
+                                            >
+                                                <option value="">
+                                                    Select Payment Method
+                                                </option>
+                                            
+                                                <option value="CASH">
+                                                    Cash
+                                                </option>
+                                            
+                                                <option value="BANK_TRANSFER">
+                                                    Bank Transfer
+                                                </option>
+                                            
+                                                <option value="UPI">
+                                                    UPI
+                                                </option>
+                                            
+                                                <option value="CARD">
+                                                    Card
+                                                </option>
+                                            
+                                                <option value="OTHER">
+                                                    Other
+                                                </option>
+                                            </select>
+                                        
+                                            <button
+                                                type="submit"
+                                                class="paid-button"
+                                            >
+                                                Mark Paid
+                                            </button>
+                                        
+                                        </form>
+                                    
+                                    {% else %}
+                                    
+                                        <span class="locked">
+                                            Locked
+                                        </span>
+                                    
+                                    {% endif %}
+                                    
                                 </td>
+                            
                             </tr>
 
                         {% endfor %}
