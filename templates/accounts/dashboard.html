@@ -83,12 +83,37 @@
             color: #1f2937;
         }
 
+        .analytics-section {
+            margin-top: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
         @media (max-width: 900px) {
             .cards {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
@@ -153,9 +178,535 @@
             <div class="number">₹0</div>
         </div>
 
+        <div class="card">
+            <h3>Total Revenue</h3>
+            <p>₹{{ total_revenue }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Paid Expenses</h3>
+            <p>₹{{ total_paid_expenses }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Pending Finance Approvals</h3>
+            <p>{{ pending_expense_count }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Completed Sales Orders</h3>
+            <p>{{ completed_sales_count }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Received Purchase Orders</h3>
+            <p>{{ received_purchase_count }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Estimated Inventory Value</h3>
+            <p>₹{{ inventory_value }}</p>
+        </div>
+
     </div>
 
+    <div class="analytics-section">
+
+        <div class="chart-card">
+
+            <h2>Monthly Revenue Trend</h2>
+
+            <div class="chart-container">
+                <canvas id="monthlyRevenueChart"></canvas>
+            </div>
+
+        </div>
+
+        <div class="chart-card">
+
+            <h2>Revenue vs Paid Expenses</h2>
+
+            <div class="chart-container">
+                <canvas id="financeComparisonChart"></canvas>
+            </div>
+
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Top Selling Products</h2>
+        
+            <div class="chart-container">
+                <canvas id="topSellingProductsChart"></canvas>
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Monthly Procurement Value</h2>
+        
+            <div class="chart-container">
+                <canvas id="monthlyProcurementChart"></canvas>
+            </div>
+        
+        </div>
+
+
+        <div class="chart-card">
+        
+            <h2>Top Suppliers by Received PO Value</h2>
+        
+            <div class="chart-container">
+                <canvas id="topSuppliersChart"></canvas>
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Inventory Stock Status</h2>
+        
+            <div class="chart-container">
+                <canvas id="inventoryStatusChart"></canvas>
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Paid Expenses by Category</h2>
+        
+            <div class="chart-container">
+                <canvas id="expenseCategoryChart"></canvas>
+            </div>
+        
+        </div>
+
+    </div>
+
+    {{ revenue_chart_labels|json_script:"revenue-chart-labels" }}
+    {{ revenue_chart_data|json_script:"revenue-chart-data" }}
+
+    {{ finance_chart_labels|json_script:"finance-chart-labels" }}
+    {{ finance_revenue_data|json_script:"finance-revenue-data" }}
+    {{ finance_expense_data|json_script:"finance-expense-data" }}
+
+    {{ top_product_labels|json_script:"top-product-labels" }}
+    {{ top_product_data|json_script:"top-product-data" }}
+
+    {{ procurement_chart_labels|json_script:"procurement-chart-labels" }}
+    {{ procurement_chart_data|json_script:"procurement-chart-data" }}
+
+    {{ top_supplier_labels|json_script:"top-supplier-labels" }}
+    {{ top_supplier_data|json_script:"top-supplier-data" }}
+
+    {{ inventory_status_labels|json_script:"inventory-status-labels" }}
+    {{ inventory_status_data|json_script:"inventory-status-data" }}
+
+    {{ expense_category_labels|json_script:"expense-category-labels" }}
+    {{ expense_category_data|json_script:"expense-category-data" }}
 </div>
+
+<script>
+    const revenueLabels = JSON.parse(
+        document.getElementById(
+            "revenue-chart-labels"
+        ).textContent
+    );
+
+    const revenueData = JSON.parse(
+        document.getElementById(
+            "revenue-chart-data"
+        ).textContent
+    );
+
+    const revenueCanvas = document.getElementById(
+        "monthlyRevenueChart"
+    );
+
+    new Chart(
+        revenueCanvas,
+        {
+            type: "line",
+
+            data: {
+                labels: revenueLabels,
+
+                datasets: [
+                    {
+                        label: "Revenue",
+                        data: revenueData,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    const financeLabels = JSON.parse(
+        document.getElementById(
+            "finance-chart-labels"
+        ).textContent
+    );
+
+    const financeRevenueData = JSON.parse(
+        document.getElementById(
+            "finance-revenue-data"
+        ).textContent
+    );
+
+    const financeExpenseData = JSON.parse(
+        document.getElementById(
+            "finance-expense-data"
+        ).textContent
+    );
+
+    const financeCanvas = document.getElementById(
+        "financeComparisonChart"
+    );
+
+    new Chart(
+        financeCanvas,
+        {
+            type: "bar",
+
+            data: {
+                labels: financeLabels,
+
+                datasets: [
+                    {
+                        label: "Revenue",
+                        data: financeRevenueData,
+                        borderWidth: 1,
+                    },
+                    {
+                        label: "Paid Expenses",
+                        data: financeExpenseData,
+                        borderWidth: 1,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    const topProductLabels = JSON.parse(
+        document.getElementById(
+            "top-product-labels"
+        ).textContent
+    );
+
+    const topProductData = JSON.parse(
+        document.getElementById(
+            "top-product-data"
+        ).textContent
+    );
+
+    const topProductsCanvas = document.getElementById(
+        "topSellingProductsChart"
+    );
+
+    new Chart(
+        topProductsCanvas,
+        {
+            type: "bar",
+
+            data: {
+                labels: topProductLabels,
+
+                datasets: [
+                    {
+                        label: "Units Sold",
+                        data: topProductData,
+                        borderWidth: 1,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                indexAxis: "y",
+
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                    }
+                }
+            }
+        }
+    );
+    
+    const procurementLabels = JSON.parse(
+        document.getElementById(
+            "procurement-chart-labels"
+        ).textContent
+    );
+
+    const procurementData = JSON.parse(
+        document.getElementById(
+            "procurement-chart-data"
+        ).textContent
+    );
+
+    const procurementCanvas = document.getElementById(
+        "monthlyProcurementChart"
+    );
+
+    new Chart(
+        procurementCanvas,
+        {
+            type: "line",
+
+            data: {
+                labels: procurementLabels,
+
+                datasets: [
+                    {
+                        label: "Procurement Value",
+                        data: procurementData,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+
+    const topSupplierLabels = JSON.parse(
+        document.getElementById(
+            "top-supplier-labels"
+        ).textContent
+    );
+
+    const topSupplierData = JSON.parse(
+        document.getElementById(
+            "top-supplier-data"
+        ).textContent
+    );
+
+    const topSuppliersCanvas = document.getElementById(
+        "topSuppliersChart"
+    );
+
+    new Chart(
+        topSuppliersCanvas,
+        {
+            type: "bar",
+
+            data: {
+                labels: topSupplierLabels,
+
+                datasets: [
+                    {
+                        label: "Received PO Value",
+                        data: topSupplierData,
+                        borderWidth: 1,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    const inventoryStatusLabels = JSON.parse(
+        document.getElementById(
+            "inventory-status-labels"
+        ).textContent
+    );
+
+    const inventoryStatusData = JSON.parse(
+        document.getElementById(
+            "inventory-status-data"
+        ).textContent
+    );
+
+    const inventoryStatusCanvas = document.getElementById(
+        "inventoryStatusChart"
+    );
+
+    new Chart(
+        inventoryStatusCanvas,
+        {
+            type: "doughnut",
+
+            data: {
+                labels: inventoryStatusLabels,
+
+                datasets: [
+                    {
+                        label: "Products",
+                        data: inventoryStatusData,
+                        borderWidth: 1,
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: "bottom",
+                    }
+                }
+            }
+        }
+    );
+
+    const expenseCategoryLabels = JSON.parse(
+        document.getElementById(
+            "expense-category-labels"
+        ).textContent
+    );
+        
+    const expenseCategoryData = JSON.parse(
+        document.getElementById(
+            "expense-category-data"
+        ).textContent
+    );
+        
+    const expenseCategoryCanvas = document.getElementById(
+        "expenseCategoryChart"
+    );
+        
+    new Chart(
+        expenseCategoryCanvas,
+        {
+            type: "bar",
+        
+            data: {
+                labels: expenseCategoryLabels,
+            
+                datasets: [
+                    {
+                        label: "Paid Expenses",
+                        data: expenseCategoryData,
+                        borderWidth: 1,
+                    }
+                ]
+            },
+        
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+            
+                plugins: {
+                    legend: {
+                        display: true,
+                    }
+                },
+            
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                    
+                        ticks: {
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+</script>
 
 </body>
 </html>
