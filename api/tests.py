@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -941,4 +942,172 @@ class HrApiTests(TestCase):
         self.assertEqual(
             data["results"][0]["employee_id"],
             "EMP-API-001",
+        )
+
+class DemandForecastApiTests(TestCase):
+
+    def setUp(self):
+
+        self.localdate_patcher = patch(
+            "sales.forecasting.timezone.localdate",
+            return_value=date(2026, 9, 18),
+        )
+
+        self.localdate_patcher.start()
+
+        self.addCleanup(
+            self.localdate_patcher.stop
+        )
+
+        self.user = get_user_model().objects.create_user(
+            username="forecast_api_user",
+            password="test-password-123",
+        )
+
+        self.product = Product.objects.create(
+            product_code="FORECAST-API-001",
+            name="Forecast API Product",
+            category="Testing",
+            description="Forecast API test product",
+            quantity=25,
+            purchase_price=Decimal("100.00"),
+            selling_price=Decimal("150.00"),
+            reorder_level=5,
+            safety_stock=2,
+            unit="PCS",
+        )
+
+        self.second_product = Product.objects.create(
+            product_code="FORECAST-API-002",
+            name="Second Forecast API Product",
+            category="Testing",
+            description="Second forecast API test product",
+            quantity=40,
+            purchase_price=Decimal("200.00"),
+            selling_price=Decimal("300.00"),
+            reorder_level=8,
+            safety_stock=4,
+            unit="PCS",
+        )
+
+    def test_demand_forecast_requires_authentication(self):
+
+        response = self.client.get(
+            reverse("api_demand_forecasts")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    def test_authenticated_user_can_view_demand_forecasts(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_demand_forecasts")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            data["count"],
+            2,
+        )
+
+        self.assertEqual(
+            len(data["results"]),
+            2,
+        )
+
+    def test_demand_forecast_response_structure(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_demand_forecasts")
+        )
+
+        data = response.json()
+
+        self.assertIn(
+            "count",
+            data,
+        )
+
+        self.assertIn(
+            "forecast_month",
+            data,
+        )
+
+        self.assertIn(
+            "results",
+            data,
+        )
+
+        self.assertEqual(
+            data["forecast_month"],
+            "2026-09-01",
+        )
+
+    def test_demand_forecast_contains_expected_fields(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_demand_forecasts")
+        )
+
+        result = response.json()["results"][0]
+
+        expected_fields = {
+            "product_code",
+            "product_name",
+            "forecast_month",
+            "predicted_demand",
+            "method",
+            "historical_months",
+        }
+
+        self.assertEqual(
+            set(result.keys()),
+            expected_fields,
+        )
+
+        self.assertGreaterEqual(
+            result["predicted_demand"],
+            0,
+        )
+
+        self.assertEqual(
+            result["historical_months"],
+            12,
+        )
+
+    def test_demand_forecast_api_is_read_only(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.post(
+            reverse("api_demand_forecasts"),
+            {},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            405,
         )

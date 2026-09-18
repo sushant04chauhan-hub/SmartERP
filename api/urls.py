@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     ApiStatusView,
+    DemandForecastAPIView,
     DepartmentDetailAPIView,
     DepartmentListAPIView,
     EmployeeDetailAPIView,
@@ -23,6 +24,12 @@ urlpatterns = [
         "status/",
         ApiStatusView.as_view(),
         name="api_status",
+    ),
+
+    path(
+        "demand-forecasts/",
+        DemandForecastAPIView.as_view(),
+        name="api_demand_forecasts",
     ),
 
     path(

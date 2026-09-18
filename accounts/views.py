@@ -11,6 +11,7 @@ from inventory.models import Product
 from finance.models import Expense, Revenue
 from procurement.models import PurchaseOrder, PurchaseOrderItem
 from sales.models import SalesOrder, SalesOrderItem
+from sales.forecasting import get_all_product_forecasts
 
 
 class SmartERPLoginView(LoginView):
@@ -284,6 +285,30 @@ def dashboard(request):
         for item in expense_by_category
     ]
 
+    demand_forecasts = get_all_product_forecasts()
+
+    top_demand_forecasts = sorted(
+        demand_forecasts,
+        key=lambda item: item["predicted_demand"],
+        reverse=True,
+    )[:5]
+
+    forecast_chart_labels = [
+        item["product_name"]
+        for item in top_demand_forecasts
+    ]
+
+    forecast_chart_data = [
+        item["predicted_demand"]
+        for item in top_demand_forecasts
+    ]
+
+    forecast_month = (
+        demand_forecasts[0]["forecast_month"]
+        if demand_forecasts
+        else None
+    )
+
     return render(
         request,
         "accounts/dashboard.html",
@@ -314,5 +339,9 @@ def dashboard(request):
             "inventory_status_data": inventory_status_data,
             "expense_category_labels": expense_category_labels,
             "expense_category_data": expense_category_data,
+            "demand_forecasts": demand_forecasts,
+            "forecast_chart_labels": forecast_chart_labels,
+            "forecast_chart_data": forecast_chart_data,
+            "forecast_month": forecast_month,
         },
     )

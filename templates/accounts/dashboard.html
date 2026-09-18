@@ -105,6 +105,31 @@
             height: 350px;
         }
 
+        .forecast-table-wrapper {
+            overflow-x: auto;
+        }
+        
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .forecast-table th,
+        .forecast-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .forecast-table th {
+            font-weight: 600;
+            background: #f8fafc;
+        }
+        
+        .forecast-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
         @media (max-width: 900px) {
             .cards {
                 grid-template-columns: repeat(2, 1fr);
@@ -244,6 +269,83 @@
 
         <div class="chart-card">
         
+            <h2>
+                Demand Forecast
+                {% if forecast_month %}
+                    - {{ forecast_month|date:"F Y" }}
+                {% endif %}
+            </h2>
+        
+            <div class="chart-container">
+                <canvas id="demandForecastChart"></canvas>
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Demand Forecast Details</h2>
+        
+            <div class="forecast-table-wrapper">
+            
+                <table class="forecast-table">
+                
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Predicted Demand</th>
+                            <th>Method</th>
+                            <th>Historical Months</th>
+                        </tr>
+                    </thead>
+                
+                    <tbody>
+                    
+                        {% for forecast in demand_forecasts %}
+                    
+                            <tr>
+                            
+                                <td>
+                                    {{ forecast.product_code }}
+                                    -
+                                    {{ forecast.product_name }}
+                                </td>
+                            
+                                <td>
+                                    {{ forecast.predicted_demand }}
+                                    units
+                                </td>
+                            
+                                <td>
+                                    {{ forecast.method }}
+                                </td>
+                            
+                                <td>
+                                    {{ forecast.historical_months }}
+                                </td>
+                            
+                            </tr>
+                        
+                        {% empty %}
+                        
+                            <tr>
+                                <td colspan="4">
+                                    No demand forecast data available.
+                                </td>
+                            </tr>
+                        
+                        {% endfor %}
+                        
+                    </tbody>
+                
+                </table>
+            
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
             <h2>Monthly Procurement Value</h2>
         
             <div class="chart-container">
@@ -306,6 +408,9 @@
 
     {{ expense_category_labels|json_script:"expense-category-labels" }}
     {{ expense_category_data|json_script:"expense-category-data" }}
+
+    {{ forecast_chart_labels|json_script:"forecast-chart-labels" }}
+    {{ forecast_chart_data|json_script:"forecast-chart-data" }}
 </div>
 
 <script>
@@ -703,6 +808,54 @@
                     }
                 }
             }
+        }
+    );
+
+    const forecastLabels = JSON.parse(
+        document.getElementById(
+            "forecast-chart-labels"
+        ).textContent
+    );
+
+    const forecastData = JSON.parse(
+        document.getElementById(
+            "forecast-chart-data"
+        ).textContent
+    );
+
+    new Chart(
+        document.getElementById(
+            "demandForecastChart"
+        ),
+        {
+            type: "bar",
+
+            data: {
+                labels: forecastLabels,
+
+                datasets: [
+                    {
+                        label: "Predicted Demand (Units)",
+                        data: forecastData,
+                    },
+                ],
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
         }
     );
 

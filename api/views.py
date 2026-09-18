@@ -8,6 +8,7 @@ from hr.models import Department, Employee
 from inventory.models import Product
 from procurement.models import PurchaseOrder
 from sales.models import SalesOrder
+from sales.forecasting import get_all_product_forecasts
 
 from .serializers import (
     DepartmentSerializer,
@@ -31,6 +32,24 @@ class ApiStatusView(APIView):
                 "status": "ok",
                 "message": "SmartERP API is running.",
                 "user": request.user.username,
+            }
+        )
+
+class DemandForecastAPIView(APIView):
+
+    def get(self, request):
+
+        forecasts = get_all_product_forecasts()
+
+        return Response(
+            {
+                "count": len(forecasts),
+                "forecast_month": (
+                    forecasts[0]["forecast_month"]
+                    if forecasts
+                    else None
+                ),
+                "results": forecasts,
             }
         )
 

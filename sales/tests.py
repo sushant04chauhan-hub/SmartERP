@@ -1,4 +1,6 @@
+from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -10,6 +12,11 @@ from inventory.models import Product, StockMovement
 from .forms import (
     SalesOrderForm,
     SalesOrderItemFormSet,
+)
+from .forecasting import (
+    forecast_product_demand,
+    get_all_product_forecasts,
+    get_monthly_product_demand,
 )
 from .models import (
     Customer,
@@ -1015,4 +1022,306 @@ class SalesTests(TestCase):
                 sales_order=sales_order,
             ).count(),
             1,
+        )
+
+class DemandForecastingTests(TestCase):
+
+    def setUp(self):
+
+        self.localdate_patcher = patch(
+            "sales.forecasting.timezone.localdate",
+            return_value=date(2026, 9, 18),
+        )
+
+        self.localdate_patcher.start()
+
+        self.addCleanup(
+            self.localdate_patcher.stop
+        )
+
+        self.customer = Customer.objects.create(
+            name="Forecast Test Customer",
+            email="forecast@example.com",
+        )
+
+        self.product = Product.objects.create(
+            product_code="FORECAST-P001",
+            name="Forecast Product",
+            category="Testing",
+            quantity=100,
+            purchase_price=Decimal("100.00"),
+            selling_price=Decimal("150.00"),
+            reorder_level=10,
+            safety_stock=5,
+            unit="PCS",
+        )
+
+        self.no_demand_product = Product.objects.create(
+            product_code="FORECAST-P002",
+            name="No Demand Product",
+            category="Testing",
+            quantity=50,
+            purchase_price=Decimal("200.00"),
+            selling_price=Decimal("300.00"),
+            reorder_level=8,
+            safety_stock=4,
+            unit="PCS",
+        )
+
+    def create_completed_sale(
+        self,
+        *,
+        order_number,
+        completed_date,
+        quantity,
+        product=None,
+    ):
+
+        if product is None:
+            product = self.product
+
+        sales_order = SalesOrder.objects.create(
+            customer=self.customer,
+            order_number=order_number,
+            status="COMPLETED",
+            completed_date=completed_date,
+            total_amount=(
+                Decimal(quantity)
+                * product.selling_price
+            ),
+        )
+
+        SalesOrderItem.objects.create(
+            sales_order=sales_order,
+            product=product,
+            quantity=quantity,
+            unit_price=product.selling_price,
+        )
+
+        return sales_order
+
+    def test_monthly_demand_returns_12_complete_months(self):
+
+        self.create_completed_sale(
+            order_number="FORECAST-SO-001",
+            completed_date=date(2025, 9, 10),
+            quantity=8,
+        )
+
+        self.create_completed_sale(
+            order_number="FORECAST-SO-002",
+            completed_date=date(2025, 11, 10),
+            quantity=9,
+        )
+
+        history = get_monthly_product_demand(
+            self.product
+        )
+
+        self.assertEqual(
+            len(history),
+            12,
+        )
+
+        self.assertEqual(
+            history[0]["month"],
+            date(2025, 9, 1),
+        )
+
+        self.assertEqual(
+            history[-1]["month"],
+            date(2026, 8, 1),
+        )
+
+        self.assertEqual(
+            history[0]["quantity"],
+            8,
+        )
+
+        self.assertEqual(
+            history[1]["quantity"],
+            0,
+        )
+
+        self.assertEqual(
+            history[2]["quantity"],
+            9,
+        )
+
+    def test_linear_regression_forecast(self):
+
+        sales_data = [
+            (
+                "FORECAST-LR-001",
+                date(2025, 9, 10),
+                5,
+            ),
+            (
+                "FORECAST-LR-002",
+                date(2026, 1, 10),
+                6,
+            ),
+            (
+                "FORECAST-LR-003",
+                date(2026, 5, 10),
+                7,
+            ),
+            (
+                "FORECAST-LR-004",
+                date(2026, 8, 10),
+                8,
+            ),
+        ]
+
+        for (
+            order_number,
+            completed_date,
+            quantity,
+        ) in sales_data:
+
+            self.create_completed_sale(
+                order_number=order_number,
+                completed_date=completed_date,
+                quantity=quantity,
+            )
+
+        forecast = forecast_product_demand(
+            self.product
+        )
+
+        self.assertEqual(
+            forecast["method"],
+            "Linear Regression",
+        )
+
+        self.assertEqual(
+            forecast["forecast_month"],
+            date(2026, 9, 1),
+        )
+
+        self.assertEqual(
+            forecast["historical_months"],
+            12,
+        )
+
+        self.assertGreaterEqual(
+            forecast["predicted_demand"],
+            0,
+        )
+
+    def test_no_demand_uses_fallback(self):
+
+        forecast = forecast_product_demand(
+            self.no_demand_product
+        )
+
+        self.assertEqual(
+            forecast["predicted_demand"],
+            0,
+        )
+
+        self.assertEqual(
+            forecast["method"],
+            "No-demand fallback",
+        )
+
+        self.assertEqual(
+            forecast["historical_months"],
+            12,
+        )
+
+    def test_limited_history_uses_average_fallback(self):
+
+        self.create_completed_sale(
+            order_number="FORECAST-AVG-001",
+            completed_date=date(2025, 10, 10),
+            quantity=6,
+        )
+
+        self.create_completed_sale(
+            order_number="FORECAST-AVG-002",
+            completed_date=date(2026, 4, 10),
+            quantity=6,
+        )
+
+        forecast = forecast_product_demand(
+            self.product
+        )
+
+        self.assertEqual(
+            forecast["method"],
+            "Historical average fallback",
+        )
+
+        self.assertEqual(
+            forecast["predicted_demand"],
+            1,
+        )
+
+    def test_forecast_never_returns_negative_demand(self):
+
+        sales_data = [
+            (
+                "FORECAST-NEG-001",
+                date(2025, 9, 10),
+                12,
+            ),
+            (
+                "FORECAST-NEG-002",
+                date(2025, 10, 10),
+                8,
+            ),
+            (
+                "FORECAST-NEG-003",
+                date(2025, 11, 10),
+                4,
+            ),
+        ]
+
+        for (
+            order_number,
+            completed_date,
+            quantity,
+        ) in sales_data:
+
+            self.create_completed_sale(
+                order_number=order_number,
+                completed_date=completed_date,
+                quantity=quantity,
+            )
+
+        forecast = forecast_product_demand(
+            self.product
+        )
+
+        self.assertEqual(
+            forecast["method"],
+            "Linear Regression",
+        )
+
+        self.assertGreaterEqual(
+            forecast["predicted_demand"],
+            0,
+        )
+
+    def test_all_product_forecasts_returns_every_product(self):
+
+        forecasts = get_all_product_forecasts()
+
+        self.assertEqual(
+            len(forecasts),
+            2,
+        )
+
+        product_codes = {
+            forecast["product_code"]
+            for forecast in forecasts
+        }
+
+        self.assertEqual(
+            product_codes,
+            {
+                "FORECAST-P001",
+                "FORECAST-P002",
+            },
         )
