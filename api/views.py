@@ -24,6 +24,9 @@ from .serializers import (
 
 from .pagination import StandardResultsSetPagination
 
+from inventory.reorder_recommendations import (
+    get_all_reorder_recommendations,
+)
 
 class ApiStatusView(APIView):
 
@@ -433,5 +436,27 @@ class SupplierScoreAPIView(APIView):
             {
                 "count": len(scores),
                 "results": scores,
+            }
+        )
+
+class ReorderRecommendationAPIView(APIView):
+
+    def get(self, request):
+
+        recommendations = (
+            get_all_reorder_recommendations()
+        )
+
+        reorder_items = [
+            item
+            for item in recommendations
+            if item["action"] == "REORDER"
+        ]
+
+        return Response(
+            {
+                "count": len(recommendations),
+                "reorder_count": len(reorder_items),
+                "results": recommendations,
             }
         )

@@ -236,6 +236,15 @@
         <div class="card">
             <h3>Estimated Inventory Value</h3>
             <p>₹{{ inventory_value }}</p>
+        </div>  
+
+        <div class="kpi-card">
+
+            <h3>Reorder Recommendations</h3>
+            <p>
+                {{ reorder_recommendation_count }}
+            </p>
+        
         </div>
 
     </div>
@@ -455,6 +464,82 @@
         </div>
 
     </div>
+
+    <div class="chart-card">
+    
+        <h2>Reorder Recommendations</h2>
+    
+        <p>
+            Forecast-aware inventory recommendations based on current stock,
+            predicted demand, reorder level, and safety stock.
+        </p>
+    
+        <div class="forecast-table-wrapper">
+        
+            <table class="forecast-table">
+            
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Current Stock</th>
+                        <th>Forecast Demand</th>
+                        <th>Projected Stock</th>
+                        <th>Recommended Qty</th>
+                        <th>Urgency</th>
+                    </tr>
+                </thead>
+            
+                <tbody>
+                
+                    {% for item in top_reorder_recommendations %}
+                
+                        <tr>
+                        
+                            <td>
+                                {{ item.product_name }}
+                            </td>
+                        
+                            <td>
+                                {{ item.current_stock }}
+                            </td>
+                        
+                            <td>
+                                {{ item.predicted_demand }}
+                            </td>
+                        
+                            <td>
+                                {{ item.projected_stock }}
+                            </td>
+                        
+                            <td>
+                                {{ item.recommended_quantity }}
+                            </td>
+                        
+                            <td>
+                                {{ item.urgency }}
+                            </td>
+                        
+                        </tr>
+                    
+                    {% empty %}
+                    
+                        <tr>
+                            <td colspan="6">
+                                No reorder recommendations at this time.
+                                Current inventory levels are sufficient for
+                                forecast demand.
+                            </td>
+                        </tr>
+                    
+                    {% endfor %}
+                    
+                </tbody>
+            
+            </table>
+        
+        </div>
+    
+    </div>   
 
     <div class="chart-card">
 

@@ -14,6 +14,9 @@ from procurement.models import PurchaseOrder, PurchaseOrderItem
 from procurement.supplier_scoring import get_supplier_scores
 from sales.models import SalesOrder, SalesOrderItem
 from sales.forecasting import get_all_product_forecasts
+from inventory.reorder_recommendations import (
+    get_all_reorder_recommendations,
+)
 
 
 class SmartERPLoginView(LoginView):
@@ -341,6 +344,24 @@ def dashboard(request):
         for item in top_supplier_scores
     ]
 
+    reorder_recommendations = (
+        get_all_reorder_recommendations()
+    )
+
+    reorder_items = [
+        item
+        for item in reorder_recommendations
+        if item["action"] == "REORDER"
+    ]
+
+    reorder_recommendation_count = len(
+        reorder_items
+    )
+
+    top_reorder_recommendations = (
+        reorder_items[:5]
+    )
+
     return render(
         request,
         "accounts/dashboard.html",
@@ -380,5 +401,9 @@ def dashboard(request):
             "supplier_scores": supplier_scores,
             "supplier_score_labels": supplier_score_labels,
             "supplier_score_data": supplier_score_data,
+            "reorder_recommendations": reorder_recommendations,
+            "reorder_items": reorder_items,
+            "reorder_recommendation_count": reorder_recommendation_count,
+            "top_reorder_recommendations": top_reorder_recommendations,
         },
     )

@@ -6,6 +6,7 @@ from decimal import Decimal
 from datetime import date
 from finance.models import Expense, Revenue
 from hr.models import Department, Employee
+from unittest.mock import patch
 
 from inventory.models import Product
 from procurement.models import (
@@ -1437,6 +1438,302 @@ class SupplierScoreApiTests(TestCase):
 
         response = self.client.post(
             reverse("api_supplier_scores"),
+            {},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            405,
+        )
+
+class ReorderRecommendationApiTests(TestCase):
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="reorder_api_user",
+            password="test-password-123",
+        )
+
+        self.no_action_product = Product.objects.create(
+            product_code="API-REORDER-NONE",
+            name="No Action Product",
+            category="Testing",
+            description="Healthy stock product",
+            quantity=20,
+            purchase_price=100,
+            selling_price=150,
+            reorder_level=5,
+            safety_stock=2,
+            unit="PCS",
+        )
+
+        self.high_product = Product.objects.create(
+            product_code="API-REORDER-HIGH",
+            name="High Reorder Product",
+            category="Testing",
+            description="High urgency product",
+            quantity=6,
+            purchase_price=100,
+            selling_price=150,
+            reorder_level=5,
+            safety_stock=2,
+            unit="PCS",
+        )
+
+        self.critical_product = Product.objects.create(
+            product_code="API-REORDER-CRITICAL",
+            name="Critical Reorder Product",
+            category="Testing",
+            description="Critical urgency product",
+            quantity=3,
+            purchase_price=100,
+            selling_price=150,
+            reorder_level=5,
+            safety_stock=2,
+            unit="PCS",
+        )
+
+    def forecast_for_product(self, product):
+
+        demand_by_code = {
+            "API-REORDER-NONE": 2,
+            "API-REORDER-HIGH": 4,
+            "API-REORDER-CRITICAL": 4,
+        }
+
+        return {
+            "product_code": product.product_code,
+            "product_name": product.name,
+            "forecast_month": "2026-09-01",
+            "predicted_demand": (
+                demand_by_code[
+                    product.product_code
+                ]
+            ),
+            "method": "Linear Regression",
+            "historical_months": 12,
+        }
+
+    def test_reorder_api_requires_authentication(self):
+
+        response = self.client.get(
+            reverse(
+                "api_reorder_recommendations"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    @patch(
+        "inventory.reorder_recommendations."
+        "forecast_product_demand"
+    )
+    def test_authenticated_user_can_view_recommendations(
+        self,
+        mock_forecast,
+    ):
+
+        mock_forecast.side_effect = (
+            self.forecast_for_product
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse(
+                "api_reorder_recommendations"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            data["count"],
+            3,
+        )
+
+        self.assertEqual(
+            data["reorder_count"],
+            2,
+        )
+
+        self.assertEqual(
+            len(data["results"]),
+            3,
+        )
+
+    @patch(
+        "inventory.reorder_recommendations."
+        "forecast_product_demand"
+    )
+    def test_reorder_response_structure(
+        self,
+        mock_forecast,
+    ):
+
+        mock_forecast.side_effect = (
+            self.forecast_for_product
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse(
+                "api_reorder_recommendations"
+            )
+        )
+
+        result = response.json()[
+            "results"
+        ][0]
+
+        expected_fields = {
+            "product_code",
+            "product_name",
+            "current_stock",
+            "predicted_demand",
+            "projected_stock",
+            "reorder_level",
+            "safety_stock",
+            "action",
+            "urgency",
+            "recommended_quantity",
+            "forecast_month",
+            "forecast_method",
+        }
+
+        self.assertEqual(
+            set(result.keys()),
+            expected_fields,
+        )
+
+    @patch(
+        "inventory.reorder_recommendations."
+        "forecast_product_demand"
+    )
+    def test_reorder_count_is_correct(
+        self,
+        mock_forecast,
+    ):
+
+        mock_forecast.side_effect = (
+            self.forecast_for_product
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse(
+                "api_reorder_recommendations"
+            )
+        )
+
+        data = response.json()
+
+        reorder_results = [
+            item
+            for item in data["results"]
+            if item["action"] == "REORDER"
+        ]
+
+        self.assertEqual(
+            data["reorder_count"],
+            len(reorder_results),
+        )
+
+        self.assertEqual(
+            data["reorder_count"],
+            2,
+        )
+
+    @patch(
+        "inventory.reorder_recommendations."
+        "forecast_product_demand"
+    )
+    def test_recommendations_are_sorted_by_urgency(
+        self,
+        mock_forecast,
+    ):
+
+        mock_forecast.side_effect = (
+            self.forecast_for_product
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse(
+                "api_reorder_recommendations"
+            )
+        )
+
+        results = response.json()[
+            "results"
+        ]
+
+        self.assertEqual(
+            results[0]["product_code"],
+            self.critical_product.product_code,
+        )
+
+        self.assertEqual(
+            results[0]["urgency"],
+            "CRITICAL",
+        )
+
+        self.assertEqual(
+            results[1]["product_code"],
+            self.high_product.product_code,
+        )
+
+        self.assertEqual(
+            results[1]["urgency"],
+            "HIGH",
+        )
+
+        self.assertEqual(
+            results[-1]["urgency"],
+            "NONE",
+        )
+
+    @patch(
+        "inventory.reorder_recommendations."
+        "forecast_product_demand"
+    )
+    def test_reorder_api_is_read_only(
+        self,
+        mock_forecast,
+    ):
+
+        mock_forecast.side_effect = (
+            self.forecast_for_product
+        )
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.post(
+            reverse(
+                "api_reorder_recommendations"
+            ),
             {},
         )
 
