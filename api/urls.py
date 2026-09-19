@@ -17,6 +17,7 @@ from .views import (
     RevenueListAPIView,
     SalesOrderDetailAPIView,
     SalesOrderListAPIView,
+    ExpenseAnomalyAPIView,
 )
 
 urlpatterns = [
@@ -30,6 +31,12 @@ urlpatterns = [
         "demand-forecasts/",
         DemandForecastAPIView.as_view(),
         name="api_demand_forecasts",
+    ),
+
+    path(
+        "expense-anomalies/",
+        ExpenseAnomalyAPIView.as_view(),
+        name="api_expense_anomalies",
     ),
 
     path(

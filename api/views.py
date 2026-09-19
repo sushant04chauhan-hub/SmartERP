@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 from finance.models import Expense, Revenue
+from finance.anomaly_detection import detect_expense_anomalies
 from hr.models import Department, Employee
 from inventory.models import Product
 from procurement.models import PurchaseOrder
@@ -50,6 +51,26 @@ class DemandForecastAPIView(APIView):
                     else None
                 ),
                 "results": forecasts,
+            }
+        )
+
+class ExpenseAnomalyAPIView(APIView):
+
+    def get(self, request):
+
+        results = detect_expense_anomalies()
+
+        anomalies = [
+            item
+            for item in results
+            if item["is_anomaly"]
+        ]
+
+        return Response(
+            {
+                "count": len(results),
+                "anomaly_count": len(anomalies),
+                "results": results,
             }
         )
 

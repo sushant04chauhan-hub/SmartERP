@@ -219,6 +219,11 @@
         </div>
 
         <div class="card">
+            <h3>Expense Anomalies</h3>
+            <p>{{ expense_anomaly_count }}</p>
+        </div>
+
+        <div class="card">
             <h3>Completed Sales Orders</h3>
             <p>{{ completed_sales_count }}</p>
         </div>
@@ -383,6 +388,130 @@
                 <canvas id="expenseCategoryChart"></canvas>
             </div>
         
+        </div>
+
+        <div class="chart-card">
+        
+            <h2>Expenses Needing Review</h2>
+        
+            <p>
+                These expenses were identified as unusual by the anomaly
+                detection model. A flagged expense is not automatically
+                incorrect or fraudulent and should be reviewed manually.
+            </p>
+        
+            <div class="forecast-table-wrapper">
+            
+                <table class="forecast-table">
+                
+                    <thead>
+                        <tr>
+                            <th>Expense</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Anomaly Score</th>
+                        </tr>
+                    </thead>
+                
+                    <tbody>
+                    
+                        {% for anomaly in top_expense_anomalies %}
+                    
+                            <tr>
+                                <td>{{ anomaly.title }}</td>
+                                <td>{{ anomaly.category_label }}</td>
+                                <td>₹{{ anomaly.amount|floatformat:2 }}</td>
+                                <td>{{ anomaly.status }}</td>
+                                <td>{{ anomaly.anomaly_score }}</td>
+                            </tr>
+                        
+                        {% empty %}
+                        
+                            <tr>
+                                <td colspan="5">
+                                    No unusual expenses detected.
+                                </td>
+                            </tr>
+                        
+                        {% endfor %}
+                        
+                    </tbody>
+                
+                </table>
+            
+            </div>
+        
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <h2>Expenses Needing Review</h2>
+
+        <p>
+            These expenses were identified as unusual by the anomaly
+            detection model. A flagged expense is not automatically
+            incorrect or fraudulent and should be reviewed manually.
+        </p>
+
+        <div class="forecast-table-wrapper">
+
+            <table class="forecast-table">
+
+                <thead>
+                    <tr>
+                        <th>Expense</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Anomaly Score</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for anomaly in top_expense_anomalies %}
+
+                        <tr>
+
+                            <td>
+                                {{ anomaly.title }}
+                            </td>
+
+                            <td>
+                                {{ anomaly.category_label }}
+                            </td>
+
+                            <td>
+                                ₹{{ anomaly.amount|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {{ anomaly.status }}
+                            </td>
+
+                            <td>
+                                {{ anomaly.anomaly_score }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="5">
+                                No unusual expenses detected.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
         </div>
 
     </div>

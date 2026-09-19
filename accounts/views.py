@@ -9,6 +9,7 @@ from django.shortcuts import render
 from hr.models import Department, Employee
 from inventory.models import Product
 from finance.models import Expense, Revenue
+from finance.anomaly_detection import detect_expense_anomalies
 from procurement.models import PurchaseOrder, PurchaseOrderItem
 from sales.models import SalesOrder, SalesOrderItem
 from sales.forecasting import get_all_product_forecasts
@@ -309,6 +310,22 @@ def dashboard(request):
         else None
     )
 
+    expense_anomaly_results = detect_expense_anomalies()
+
+    expense_anomalies = [
+        item
+        for item in expense_anomaly_results
+        if item["is_anomaly"]
+    ]
+
+    expense_anomaly_count = len(
+        expense_anomalies
+    )
+
+    top_expense_anomalies = (
+        expense_anomalies[:5]
+    )
+
     return render(
         request,
         "accounts/dashboard.html",
@@ -343,5 +360,7 @@ def dashboard(request):
             "forecast_chart_labels": forecast_chart_labels,
             "forecast_chart_data": forecast_chart_data,
             "forecast_month": forecast_month,
+            "expense_anomaly_count": expense_anomaly_count,
+            "top_expense_anomalies": top_expense_anomalies,
         },
     )

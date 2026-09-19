@@ -1111,3 +1111,164 @@ class DemandForecastApiTests(TestCase):
             response.status_code,
             405,
         )
+
+class ExpenseAnomalyApiTests(TestCase):
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="anomaly_api_user",
+            password="test-password-123",
+        )
+
+        for index in range(10):
+
+            Expense.objects.create(
+                title=f"Normal API Expense {index}",
+                category="OFFICE",
+                amount=Decimal(
+                    str(1000 + (index * 10))
+                ),
+                expense_date=date(2026, 8, 15),
+                reference_number=f"ANOM-API-{index}",
+                status="PAID",
+                payment_method="BANK_TRANSFER",
+            )
+
+        self.extreme_expense = Expense.objects.create(
+            title="Extreme API Expense",
+            category="OFFICE",
+            amount=Decimal("1000000.00"),
+            expense_date=date(2026, 8, 16),
+            reference_number="ANOM-API-EXTREME",
+            status="PAID",
+            payment_method="BANK_TRANSFER",
+        )
+
+    def test_expense_anomaly_api_requires_authentication(self):
+
+        response = self.client.get(
+            reverse("api_expense_anomalies")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    def test_authenticated_user_can_view_expense_anomalies(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_expense_anomalies")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            data["count"],
+            11,
+        )
+
+        self.assertEqual(
+            len(data["results"]),
+            11,
+        )
+
+    def test_expense_anomaly_response_structure(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_expense_anomalies")
+        )
+
+        data = response.json()
+
+        self.assertIn(
+            "count",
+            data,
+        )
+
+        self.assertIn(
+            "anomaly_count",
+            data,
+        )
+
+        self.assertIn(
+            "results",
+            data,
+        )
+
+        result = data["results"][0]
+
+        expected_fields = {
+            "expense_id",
+            "title",
+            "category",
+            "category_label",
+            "amount",
+            "expense_date",
+            "status",
+            "is_anomaly",
+            "anomaly_score",
+        }
+
+        self.assertEqual(
+            set(result.keys()),
+            expected_fields,
+        )
+
+        self.assertIsInstance(
+            result["is_anomaly"],
+            bool,
+        )
+
+    def test_extreme_expense_is_flagged(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_expense_anomalies")
+        )
+
+        results = response.json()["results"]
+
+        extreme_result = next(
+            result
+            for result in results
+            if result["expense_id"]
+            == self.extreme_expense.id
+        )
+
+        self.assertTrue(
+            extreme_result["is_anomaly"]
+        )
+
+    def test_expense_anomaly_api_is_read_only(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.post(
+            reverse("api_expense_anomalies"),
+            {},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            405,
+        )
