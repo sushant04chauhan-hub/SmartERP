@@ -8,6 +8,7 @@ from finance.anomaly_detection import detect_expense_anomalies
 from hr.models import Department, Employee
 from inventory.models import Product
 from procurement.models import PurchaseOrder
+from procurement.supplier_scoring import get_supplier_scores
 from sales.models import SalesOrder
 from sales.forecasting import get_all_product_forecasts
 
@@ -421,3 +422,16 @@ class EmployeeDetailAPIView(RetrieveAPIView):
     )
 
     serializer_class = EmployeeSerializer
+
+class SupplierScoreAPIView(APIView):
+
+    def get(self, request):
+
+        scores = get_supplier_scores()
+
+        return Response(
+            {
+                "count": len(scores),
+                "results": scores,
+            }
+        )

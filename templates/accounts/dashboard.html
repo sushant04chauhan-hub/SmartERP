@@ -372,6 +372,16 @@
 
         <div class="chart-card">
         
+            <h2>Supplier Performance Scores</h2>
+        
+            <div class="chart-container">
+                <canvas id="supplierScoreChart"></canvas>
+            </div>
+        
+        </div>
+
+        <div class="chart-card">
+        
             <h2>Inventory Stock Status</h2>
         
             <div class="chart-container">
@@ -516,6 +526,76 @@
 
     </div>
 
+    <div class="chart-card">
+
+        <h2>Supplier Performance Details</h2>
+
+        <div class="forecast-table-wrapper">
+
+            <table class="forecast-table">
+
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Score</th>
+                        <th>Rating</th>
+                        <th>On-Time Rate</th>
+                        <th>Avg Delay</th>
+                        <th>Cancellation Rate</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for supplier in supplier_scores %}
+
+                        <tr>
+
+                            <td>
+                                {{ supplier.supplier_name }}
+                            </td>
+
+                            <td>
+                                {{ supplier.supplier_score }}
+                            </td>
+
+                            <td>
+                                {{ supplier.rating }}
+                            </td>
+
+                            <td>
+                                {{ supplier.on_time_rate }}%
+                            </td>
+
+                            <td>
+                                {{ supplier.average_delay_days }}
+                                days
+                            </td>
+
+                            <td>
+                                {{ supplier.cancellation_rate }}%
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="6">
+                                No supplier performance data available.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
     {{ revenue_chart_labels|json_script:"revenue-chart-labels" }}
     {{ revenue_chart_data|json_script:"revenue-chart-data" }}
 
@@ -540,6 +620,9 @@
 
     {{ forecast_chart_labels|json_script:"forecast-chart-labels" }}
     {{ forecast_chart_data|json_script:"forecast-chart-data" }}
+
+    {{ supplier_score_labels|json_script:"supplier-score-labels" }}
+    {{ supplier_score_data|json_script:"supplier-score-data" }}
 </div>
 
 <script>
@@ -988,6 +1071,50 @@
         }
     );
 
+    const supplierScoreLabels = JSON.parse(
+        document.getElementById(
+            "supplier-score-labels"
+        ).textContent
+    );
+        
+    const supplierScoreData = JSON.parse(
+        document.getElementById(
+            "supplier-score-data"
+        ).textContent
+    );
+        
+    new Chart(
+        document.getElementById(
+            "supplierScoreChart"
+        ),
+        {
+            type: "bar",
+        
+            data: {
+                labels: supplierScoreLabels,
+            
+                datasets: [
+                    {
+                        label: "Supplier Score",
+                        data: supplierScoreData,
+                    },
+                ],
+            },
+        
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+            
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                    },
+                },
+            },
+        }
+    );
 </script>
 
 </body>

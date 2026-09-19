@@ -17,6 +17,14 @@ from .models import (
     PurchaseOrderItem,
     Supplier,
 )
+
+from .supplier_scoring import (
+    calculate_supplier_score,
+    get_supplier_performance,
+    get_supplier_rating,
+    get_supplier_scores,
+)
+
 from finance.models import Expense
 
 class ProcurementTests(TestCase):
@@ -730,4 +738,311 @@ class ProcurementTests(TestCase):
         self.assertEqual(
             purchase_order.status,
             "CANCELLED",
+        )
+
+class SupplierScoringTests(TestCase):
+
+    def create_purchase_order(
+        self,
+        *,
+        supplier,
+        order_number,
+        status,
+        expected_date=None,
+        received_date=None,
+        total_amount="1000.00",
+    ):
+
+        return PurchaseOrder.objects.create(
+            supplier=supplier,
+            order_number=order_number,
+            status=status,
+            expected_delivery_date=expected_date,
+            received_date=received_date,
+            total_amount=Decimal(total_amount),
+        )
+
+    def test_supplier_performance_metrics_are_calculated(self):
+
+        supplier = Supplier.objects.create(
+            name="Performance Test Supplier"
+        )
+
+        self.create_purchase_order(
+            supplier=supplier,
+            order_number="SCORE-PO-001",
+            status="RECEIVED",
+            expected_date=timezone.datetime(
+                2026,
+                8,
+                10,
+            ).date(),
+            received_date=timezone.datetime(
+                2026,
+                8,
+                10,
+            ).date(),
+            total_amount="1000.00",
+        )
+
+        self.create_purchase_order(
+            supplier=supplier,
+            order_number="SCORE-PO-002",
+            status="RECEIVED",
+            expected_date=timezone.datetime(
+                2026,
+                8,
+                20,
+            ).date(),
+            received_date=timezone.datetime(
+                2026,
+                8,
+                22,
+            ).date(),
+            total_amount="2000.00",
+        )
+
+        self.create_purchase_order(
+            supplier=supplier,
+            order_number="SCORE-PO-003",
+            status="CANCELLED",
+            total_amount="500.00",
+        )
+
+        performance = get_supplier_performance()[0]
+
+        self.assertEqual(
+            performance["total_orders"],
+            3,
+        )
+
+        self.assertEqual(
+            performance["received_orders"],
+            2,
+        )
+
+        self.assertEqual(
+            performance["cancelled_orders"],
+            1,
+        )
+
+        self.assertEqual(
+            performance["total_received_value"],
+            3000.0,
+        )
+
+        self.assertEqual(
+            performance["delivery_records"],
+            2,
+        )
+
+        self.assertEqual(
+            performance["on_time_deliveries"],
+            1,
+        )
+
+        self.assertEqual(
+            performance["on_time_rate"],
+            50.0,
+        )
+
+        self.assertEqual(
+            performance["average_delay_days"],
+            1.0,
+        )
+
+        self.assertEqual(
+            performance["cancellation_rate"],
+            33.33,
+        )
+
+    def test_supplier_score_stays_between_zero_and_100(self):
+
+        performance = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 5,
+            "on_time_rate": 80.0,
+            "average_delay_days": 1.0,
+            "cancellation_rate": 0.0,
+        }
+
+        score = calculate_supplier_score(
+            performance
+        )
+
+        self.assertGreaterEqual(
+            score,
+            0,
+        )
+
+        self.assertLessEqual(
+            score,
+            100,
+        )
+
+    def test_fulfillment_rate_affects_supplier_score(self):
+
+        strong_fulfillment = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 5,
+            "on_time_rate": 80.0,
+            "average_delay_days": 1.0,
+            "cancellation_rate": 0.0,
+        }
+
+        weak_fulfillment = {
+            "total_orders": 5,
+            "received_orders": 3,
+            "delivery_records": 3,
+            "on_time_rate": 80.0,
+            "average_delay_days": 1.0,
+            "cancellation_rate": 0.0,
+        }
+
+        strong_score = calculate_supplier_score(
+            strong_fulfillment
+        )
+
+        weak_score = calculate_supplier_score(
+            weak_fulfillment
+        )
+
+        self.assertGreater(
+            strong_score,
+            weak_score,
+        )
+
+    def test_cancellation_rate_reduces_supplier_score(self):
+
+        no_cancellations = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 5,
+            "on_time_rate": 80.0,
+            "average_delay_days": 1.0,
+            "cancellation_rate": 0.0,
+        }
+
+        high_cancellations = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 5,
+            "on_time_rate": 80.0,
+            "average_delay_days": 1.0,
+            "cancellation_rate": 40.0,
+        }
+
+        self.assertGreater(
+            calculate_supplier_score(
+                no_cancellations
+            ),
+            calculate_supplier_score(
+                high_cancellations
+            ),
+        )
+
+    def test_limited_delivery_history_reduces_confidence(self):
+
+        complete_history = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 5,
+            "on_time_rate": 100.0,
+            "average_delay_days": 0.0,
+            "cancellation_rate": 0.0,
+        }
+
+        limited_history = {
+            "total_orders": 5,
+            "received_orders": 5,
+            "delivery_records": 1,
+            "on_time_rate": 100.0,
+            "average_delay_days": 0.0,
+            "cancellation_rate": 0.0,
+        }
+
+        self.assertGreater(
+            calculate_supplier_score(
+                complete_history
+            ),
+            calculate_supplier_score(
+                limited_history
+            ),
+        )
+
+    def test_supplier_rating_thresholds(self):
+
+        self.assertEqual(
+            get_supplier_rating(85),
+            "EXCELLENT",
+        )
+
+        self.assertEqual(
+            get_supplier_rating(70),
+            "GOOD",
+        )
+
+        self.assertEqual(
+            get_supplier_rating(55),
+            "FAIR",
+        )
+
+        self.assertEqual(
+            get_supplier_rating(54.99),
+            "NEEDS_REVIEW",
+        )
+
+    def test_supplier_scores_are_sorted_highest_first(self):
+
+        reliable_supplier = Supplier.objects.create(
+            name="Reliable Supplier"
+        )
+
+        delayed_supplier = Supplier.objects.create(
+            name="Delayed Supplier"
+        )
+
+        for index in range(5):
+
+            expected_date = timezone.datetime(
+                2026,
+                7,
+                1 + index,
+            ).date()
+
+            self.create_purchase_order(
+                supplier=reliable_supplier,
+                order_number=(
+                    f"RELIABLE-{index}"
+                ),
+                status="RECEIVED",
+                expected_date=expected_date,
+                received_date=expected_date,
+            )
+
+            self.create_purchase_order(
+                supplier=delayed_supplier,
+                order_number=(
+                    f"DELAYED-{index}"
+                ),
+                status="RECEIVED",
+                expected_date=expected_date,
+                received_date=(
+                    expected_date
+                    + timedelta(days=5)
+                ),
+            )
+
+        scores = get_supplier_scores()
+
+        self.assertEqual(
+            scores[0]["supplier_name"],
+            "Reliable Supplier",
+        )
+
+        self.assertGreater(
+            scores[0]["supplier_score"],
+            scores[1]["supplier_score"],
         )

@@ -18,6 +18,7 @@ from .views import (
     SalesOrderDetailAPIView,
     SalesOrderListAPIView,
     ExpenseAnomalyAPIView,
+    SupplierScoreAPIView,
 )
 
 urlpatterns = [
@@ -121,5 +122,11 @@ urlpatterns = [
         "employees/<int:pk>/",
         EmployeeDetailAPIView.as_view(),
         name="api_employee_detail",
+    ),
+
+    path(
+        "supplier-scores/",
+        SupplierScoreAPIView.as_view(),
+        name="api_supplier_scores",
     ),
 ]

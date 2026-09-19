@@ -11,6 +11,7 @@ from inventory.models import Product
 from finance.models import Expense, Revenue
 from finance.anomaly_detection import detect_expense_anomalies
 from procurement.models import PurchaseOrder, PurchaseOrderItem
+from procurement.supplier_scoring import get_supplier_scores
 from sales.models import SalesOrder, SalesOrderItem
 from sales.forecasting import get_all_product_forecasts
 
@@ -326,6 +327,20 @@ def dashboard(request):
         expense_anomalies[:5]
     )
 
+    supplier_scores = get_supplier_scores()
+
+    top_supplier_scores = supplier_scores[:5]
+
+    supplier_score_labels = [
+        item["supplier_name"]
+        for item in top_supplier_scores
+    ]
+
+    supplier_score_data = [
+        item["supplier_score"]
+        for item in top_supplier_scores
+    ]
+
     return render(
         request,
         "accounts/dashboard.html",
@@ -362,5 +377,8 @@ def dashboard(request):
             "forecast_month": forecast_month,
             "expense_anomaly_count": expense_anomaly_count,
             "top_expense_anomalies": top_expense_anomalies,
+            "supplier_scores": supplier_scores,
+            "supplier_score_labels": supplier_score_labels,
+            "supplier_score_data": supplier_score_data,
         },
     )

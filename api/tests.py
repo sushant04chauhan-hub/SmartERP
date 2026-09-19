@@ -1272,3 +1272,175 @@ class ExpenseAnomalyApiTests(TestCase):
             response.status_code,
             405,
         )
+
+class SupplierScoreApiTests(TestCase):
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="supplier_score_api_user",
+            password="test-password-123",
+        )
+
+        self.reliable_supplier = Supplier.objects.create(
+            name="Reliable API Supplier",
+        )
+
+        self.delayed_supplier = Supplier.objects.create(
+            name="Delayed API Supplier",
+        )
+
+        for index in range(5):
+
+            PurchaseOrder.objects.create(
+                supplier=self.reliable_supplier,
+                order_number=f"SCORE-API-REL-{index}",
+                status="RECEIVED",
+                expected_delivery_date=date(
+                    2026,
+                    8,
+                    10 + index,
+                ),
+                received_date=date(
+                    2026,
+                    8,
+                    10 + index,
+                ),
+                total_amount=Decimal("1000.00"),
+            )
+
+            PurchaseOrder.objects.create(
+                supplier=self.delayed_supplier,
+                order_number=f"SCORE-API-DEL-{index}",
+                status="RECEIVED",
+                expected_delivery_date=date(
+                    2026,
+                    8,
+                    10 + index,
+                ),
+                received_date=date(
+                    2026,
+                    8,
+                    15 + index,
+                ),
+                total_amount=Decimal("1000.00"),
+            )
+
+    def test_supplier_score_api_requires_authentication(self):
+
+        response = self.client.get(
+            reverse("api_supplier_scores")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    def test_authenticated_user_can_view_supplier_scores(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_supplier_scores")
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        data = response.json()
+
+        self.assertEqual(
+            data["count"],
+            2,
+        )
+
+        self.assertEqual(
+            len(data["results"]),
+            2,
+        )
+
+    def test_supplier_score_response_structure(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_supplier_scores")
+        )
+
+        result = response.json()["results"][0]
+
+        expected_fields = {
+            "supplier_id",
+            "supplier_name",
+            "total_orders",
+            "received_orders",
+            "cancelled_orders",
+            "total_received_value",
+            "delivery_records",
+            "on_time_deliveries",
+            "on_time_rate",
+            "average_delay_days",
+            "cancellation_rate",
+            "supplier_score",
+            "rating",
+        }
+
+        self.assertEqual(
+            set(result.keys()),
+            expected_fields,
+        )
+
+        self.assertGreaterEqual(
+            result["supplier_score"],
+            0,
+        )
+
+        self.assertLessEqual(
+            result["supplier_score"],
+            100,
+        )
+
+    def test_supplier_scores_are_sorted_highest_first(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.get(
+            reverse("api_supplier_scores")
+        )
+
+        results = response.json()["results"]
+
+        self.assertEqual(
+            results[0]["supplier_name"],
+            "Reliable API Supplier",
+        )
+
+        self.assertGreater(
+            results[0]["supplier_score"],
+            results[1]["supplier_score"],
+        )
+
+    def test_supplier_score_api_is_read_only(self):
+
+        self.client.force_login(
+            self.user
+        )
+
+        response = self.client.post(
+            reverse("api_supplier_scores"),
+            {},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            405,
+        )
