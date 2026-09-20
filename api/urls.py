@@ -1,5 +1,7 @@
 from django.urls import path
 
+from .dashboard import DashboardAPIView
+
 from .views import (
     ApiStatusView,
     DemandForecastAPIView,
@@ -7,26 +9,34 @@ from .views import (
     DepartmentListAPIView,
     EmployeeDetailAPIView,
     EmployeeListAPIView,
+    ExpenseAnomalyAPIView,
     ExpenseDetailAPIView,
     ExpenseListAPIView,
     ProductDetailAPIView,
     ProductListAPIView,
     PurchaseOrderDetailAPIView,
     PurchaseOrderListAPIView,
+    ReorderRecommendationAPIView,
     RevenueDetailAPIView,
     RevenueListAPIView,
     SalesOrderDetailAPIView,
     SalesOrderListAPIView,
-    ExpenseAnomalyAPIView,
     SupplierScoreAPIView,
-    ReorderRecommendationAPIView,
 )
 
+
 urlpatterns = [
+
     path(
         "status/",
         ApiStatusView.as_view(),
         name="api_status",
+    ),
+
+    path(
+        "dashboard/",
+        DashboardAPIView.as_view(),
+        name="api_dashboard",
     ),
 
     path(
@@ -106,19 +116,19 @@ urlpatterns = [
         DepartmentListAPIView.as_view(),
         name="api_department_list",
     ),
-    
+
     path(
         "departments/<int:pk>/",
         DepartmentDetailAPIView.as_view(),
         name="api_department_detail",
     ),
-    
+
     path(
         "employees/",
         EmployeeListAPIView.as_view(),
         name="api_employee_list",
     ),
-    
+
     path(
         "employees/<int:pk>/",
         EmployeeDetailAPIView.as_view(),

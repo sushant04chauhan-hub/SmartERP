@@ -1,0 +1,281 @@
+.hr-page {
+  width: 100%;
+}
+
+.hr-header {
+  margin-bottom: 24px;
+}
+
+.hr-header h1 {
+  margin-bottom: 8px;
+  font-size: 32px;
+}
+
+.hr-header p {
+  margin-bottom: 0;
+  color: #6b7280;
+}
+
+.hr-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.hr-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.hr-summary-card span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hr-summary-card strong {
+  color: #111827;
+  font-size: 28px;
+}
+
+.hr-section {
+  margin-bottom: 36px;
+}
+
+.hr-section-header {
+  margin-bottom: 18px;
+}
+
+.hr-section-header h2 {
+  margin-bottom: 6px;
+  font-size: 22px;
+}
+
+.hr-section-header p {
+  margin-bottom: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hr-controls {
+  margin-bottom: 18px;
+}
+
+.hr-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.hr-search input {
+  width: 100%;
+  max-width: 440px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  outline: none;
+}
+
+.hr-search input:focus {
+  border-color: #2563eb;
+}
+
+.hr-search button {
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+}
+
+.hr-search button:hover {
+  background: #f3f4f6;
+}
+
+.hr-search button[type="submit"] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.hr-search button[type="submit"]:hover {
+  background: #1d4ed8;
+}
+
+.hr-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hr-sort label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.hr-sort select {
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  outline: none;
+}
+
+.hr-sort select:focus {
+  border-color: #2563eb;
+}
+
+.hr-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.hr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.employee-table {
+  min-width: 1250px;
+}
+
+.department-table {
+  min-width: 650px;
+}
+
+.hr-table th,
+.hr-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hr-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hr-table td {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.hr-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.hr-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.hr-status {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hr-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.hr-status-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.hr-loading,
+.hr-error {
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.hr-error {
+  color: #b91c1c;
+}
+
+.hr-empty {
+  padding: 28px !important;
+  text-align: center !important;
+  color: #6b7280 !important;
+}
+
+.hr-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.hr-pagination span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hr-pagination button {
+  padding: 9px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+}
+
+.hr-pagination button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.hr-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 700px) {
+  .hr-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-search {
+    flex-wrap: wrap;
+  }
+
+  .hr-search input {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .hr-sort {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hr-sort select {
+    width: 100%;
+  }
+
+  .hr-pagination {
+    justify-content: center;
+  }
+}

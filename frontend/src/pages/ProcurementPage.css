@@ -1,0 +1,213 @@
+.procurement-page {
+  width: 100%;
+}
+
+.procurement-header {
+  margin-bottom: 24px;
+}
+
+.procurement-header h1 {
+  margin-bottom: 8px;
+  font-size: 32px;
+}
+
+.procurement-summary {
+  color: #6b7280;
+}
+
+.procurement-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.procurement-table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+}
+
+.procurement-table th,
+.procurement-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.procurement-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.procurement-table td {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.procurement-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.procurement-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.procurement-loading,
+.procurement-error {
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.procurement-error {
+  color: #b91c1c;
+}
+
+.procurement-status {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.procurement-status-draft {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.procurement-status-approved {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.procurement-status-ordered {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.procurement-status-received {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.procurement-status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.procurement-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.procurement-pagination span {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.procurement-pagination button {
+  padding: 9px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+}
+
+.procurement-pagination button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.procurement-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.procurement-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.procurement-search input {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  outline: none;
+}
+
+.procurement-search input:focus {
+  border-color: #2563eb;
+}
+
+.procurement-search button {
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+}
+
+.procurement-search button:hover {
+  background: #f3f4f6;
+}
+
+.procurement-search button[type="submit"] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.procurement-search button[type="submit"]:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 600px) {
+  .procurement-search {
+    flex-wrap: wrap;
+  }
+
+  .procurement-search input {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}
+
+.procurement-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.procurement-sort label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.procurement-sort select {
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  outline: none;
+}
+
+.procurement-sort select:focus {
+  border-color: #2563eb;
+}
