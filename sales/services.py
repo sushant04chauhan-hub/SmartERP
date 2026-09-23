@@ -2,15 +2,25 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from audit.services import record_audit_log
+from finance.services import (
+    create_revenue_for_sales_order,
+)
 from inventory.models import Product
 from inventory.services import apply_stock_movement
-from finance.services import create_revenue_for_sales_order
+from notifications.services import (
+    create_notifications_for_roles,
+)
 
 from .models import SalesOrder
 
 
 @transaction.atomic
-def confirm_sales_order(*, sales_order):
+def confirm_sales_order(
+    *,
+    sales_order,
+    user,
+):
 
     sales_order = (
         SalesOrder.objects
@@ -19,16 +29,16 @@ def confirm_sales_order(*, sales_order):
     )
 
     if sales_order.status != "DRAFT":
-
         raise ValidationError(
             "Only draft sales orders can be confirmed."
         )
 
     if not sales_order.items.exists():
-
         raise ValidationError(
             "A sales order without items cannot be confirmed."
         )
+
+    previous_status = sales_order.status
 
     sales_order.status = "CONFIRMED"
 
@@ -39,11 +49,47 @@ def confirm_sales_order(*, sales_order):
         ]
     )
 
+    record_audit_log(
+        user=user,
+        action="CONFIRM",
+        instance=sales_order,
+        description=(
+            f"Confirmed sales order "
+            f"{sales_order.order_number}."
+        ),
+        metadata={
+            "order_number": (
+                sales_order.order_number
+            ),
+            "previous_status": previous_status,
+            "new_status": sales_order.status,
+        },
+    )
+
+    create_notifications_for_roles(
+        roles={"SALES"},
+        title="Sales order confirmed",
+        message=(
+            f"Sales order "
+            f"{sales_order.order_number} "
+            f"has been confirmed."
+        ),
+        notification_type="SUCCESS",
+        priority="NORMAL",
+        instance=sales_order,
+        target_url="/sales",
+        exclude_user=user,
+    )
+
     return sales_order
 
 
 @transaction.atomic
-def cancel_sales_order(*, sales_order):
+def cancel_sales_order(
+    *,
+    sales_order,
+    user,
+):
 
     sales_order = (
         SalesOrder.objects
@@ -60,6 +106,8 @@ def cancel_sales_order(*, sales_order):
             "Only draft or confirmed sales orders can be cancelled."
         )
 
+    previous_status = sales_order.status
+
     sales_order.status = "CANCELLED"
 
     sales_order.save(
@@ -69,7 +117,40 @@ def cancel_sales_order(*, sales_order):
         ]
     )
 
+    record_audit_log(
+        user=user,
+        action="CANCEL",
+        instance=sales_order,
+        description=(
+            f"Cancelled sales order "
+            f"{sales_order.order_number}."
+        ),
+        metadata={
+            "order_number": (
+                sales_order.order_number
+            ),
+            "previous_status": previous_status,
+            "new_status": sales_order.status,
+        },
+    )
+
+    create_notifications_for_roles(
+        roles={"SALES"},
+        title="Sales order cancelled",
+        message=(
+            f"Sales order "
+            f"{sales_order.order_number} "
+            f"has been cancelled."
+        ),
+        notification_type="WARNING",
+        priority="NORMAL",
+        instance=sales_order,
+        target_url="/sales",
+        exclude_user=user,
+    )
+
     return sales_order
+
 
 @transaction.atomic
 def complete_sales_order(
@@ -85,7 +166,6 @@ def complete_sales_order(
     )
 
     if sales_order.status != "CONFIRMED":
-
         raise ValidationError(
             "Only confirmed sales orders can be completed."
         )
@@ -97,7 +177,6 @@ def complete_sales_order(
     )
 
     if not items:
-
         raise ValidationError(
             "A sales order without items cannot be completed."
         )
@@ -153,6 +232,8 @@ def complete_sales_order(
                 )
             )
 
+    previous_status = sales_order.status
+
     for item in items:
 
         apply_stock_movement(
@@ -166,9 +247,7 @@ def complete_sales_order(
             ),
         )
 
-    sales_order.status = (
-        "COMPLETED"
-    )
+    sales_order.status = "COMPLETED"
 
     sales_order.completed_date = (
         timezone.localdate()
@@ -186,5 +265,40 @@ def complete_sales_order(
         sales_order=sales_order,
         user=user,
     )
-    
+
+    record_audit_log(
+        user=user,
+        action="COMPLETE",
+        instance=sales_order,
+        description=(
+            f"Completed sales order "
+            f"{sales_order.order_number}."
+        ),
+        metadata={
+            "order_number": (
+                sales_order.order_number
+            ),
+            "previous_status": previous_status,
+            "new_status": sales_order.status,
+            "completed_date": str(
+                sales_order.completed_date
+            ),
+        },
+    )
+
+    create_notifications_for_roles(
+        roles={"SALES"},
+        title="Sales order completed",
+        message=(
+            f"Sales order "
+            f"{sales_order.order_number} "
+            f"has been completed."
+        ),
+        notification_type="SUCCESS",
+        priority="NORMAL",
+        instance=sales_order,
+        target_url="/sales",
+        exclude_user=user,
+    )
+
     return sales_order

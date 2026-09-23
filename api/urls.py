@@ -1,5 +1,7 @@
 from django.urls import path
 
+from audit.views import AuditLogListAPIView
+
 from .dashboard import DashboardAPIView
 
 from .views import (
@@ -24,6 +26,12 @@ from .views import (
     SupplierScoreAPIView,
 )
 
+from notifications.views import (
+    NotificationListAPIView,
+    NotificationMarkAllReadAPIView,
+    NotificationMarkReadAPIView,
+    NotificationUnreadCountAPIView,
+)
 
 urlpatterns = [
 
@@ -37,6 +45,12 @@ urlpatterns = [
         "dashboard/",
         DashboardAPIView.as_view(),
         name="api_dashboard",
+    ),
+
+    path(
+        "audit-logs/",
+        AuditLogListAPIView.as_view(),
+        name="api_audit_logs",
     ),
 
     path(
@@ -145,5 +159,29 @@ urlpatterns = [
         "reorder-recommendations/",
         ReorderRecommendationAPIView.as_view(),
         name="api_reorder_recommendations",
+    ),
+
+    path(
+        "notifications/",
+        NotificationListAPIView.as_view(),
+        name="api_notification_list",
+    ),
+
+    path(
+        "notifications/unread-count/",
+        NotificationUnreadCountAPIView.as_view(),
+        name="api_notification_unread_count",
+    ),
+
+    path(
+        "notifications/<int:pk>/read/",
+        NotificationMarkReadAPIView.as_view(),
+        name="api_notification_mark_read",
+    ),
+
+    path(
+        "notifications/mark-all-read/",
+        NotificationMarkAllReadAPIView.as_view(),
+        name="api_notification_mark_all_read",
     ),
 ]

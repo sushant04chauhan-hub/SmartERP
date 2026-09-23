@@ -574,7 +574,8 @@ def confirm_order(
     try:
 
         confirm_sales_order(
-            sales_order=sales_order
+            sales_order=sales_order,
+            user=request.user,
         )
 
         messages.success(
@@ -612,7 +613,8 @@ def cancel_order(
     try:
 
         cancel_sales_order(
-            sales_order=sales_order
+            sales_order=sales_order,
+            user=request.user,
         )
 
         messages.success(

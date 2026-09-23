@@ -345,6 +345,7 @@ def mark_purchase_order(request, purchase_order_id):
 
         mark_purchase_order_ordered(
             purchase_order=purchase_order,
+            user=request.user,
         )
 
     except ValidationError as error:
@@ -422,6 +423,7 @@ def cancel_purchase(request, purchase_order_id):
 
         cancel_purchase_order(
             purchase_order=purchase_order,
+            user=request.user,
         )
 
     except ValidationError as error:

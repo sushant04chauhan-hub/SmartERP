@@ -4,10 +4,16 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.core.exceptions import ValidationError
 
 from .models import Expense, Revenue
 from .forms import ExpenseForm
 from django.db.models import Q, Sum
+from .services import (
+    approve_expense,
+    mark_expense_paid,
+    reject_expense,
+)
 
 
 @role_required("ADMIN", "MANAGER", "FINANCE")
@@ -211,23 +217,18 @@ def expense_approve(request, pk):
         pk=pk,
     )
 
-    if expense.status != "PENDING":
-        return HttpResponseBadRequest(
-            "Only pending expenses can be approved."
+    try:
+
+        approve_expense(
+            expense=expense,
+            user=request.user,
         )
 
-    expense.status = "APPROVED"
-    expense.reviewed_by = request.user
-    expense.reviewed_at = timezone.now()
+    except ValidationError as error:
 
-    expense.save(
-        update_fields=[
-            "status",
-            "reviewed_by",
-            "reviewed_at",
-            "updated_at",
-        ]
-    )
+        return HttpResponseBadRequest(
+            error.messages[0]
+        )
 
     return redirect("expense_list")
 
@@ -240,23 +241,18 @@ def expense_reject(request, pk):
         pk=pk,
     )
 
-    if expense.status != "PENDING":
-        return HttpResponseBadRequest(
-            "Only pending expenses can be rejected."
+    try:
+
+        reject_expense(
+            expense=expense,
+            user=request.user,
         )
 
-    expense.status = "REJECTED"
-    expense.reviewed_by = request.user
-    expense.reviewed_at = timezone.now()
+    except ValidationError as error:
 
-    expense.save(
-        update_fields=[
-            "status",
-            "reviewed_by",
-            "reviewed_at",
-            "updated_at",
-        ]
-    )
+        return HttpResponseBadRequest(
+            error.messages[0]
+        )
 
     return redirect("expense_list")
 
