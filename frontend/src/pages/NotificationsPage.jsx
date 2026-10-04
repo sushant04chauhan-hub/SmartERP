@@ -161,18 +161,18 @@ function NotificationsPage() {
       const timeoutId = window.setTimeout(() => {
         loadNotifications();
       }, 0);
-  
+
       return () => {
         window.clearTimeout(timeoutId);
       };
     }, [loadNotifications]);
-    
-    
+
+
     useEffect(() => {
       const timeoutId = window.setTimeout(() => {
         refreshUnreadCount();
       }, 0);
-  
+
       return () => {
         window.clearTimeout(timeoutId);
       };
