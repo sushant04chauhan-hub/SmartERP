@@ -7,12 +7,15 @@ import {
 
 import MainLayout from "./layouts/MainLayout";
 
+import AuditLogsPage from "./pages/AuditLogsPage";
 import DashboardPage from "./pages/DashboardPage";
 import FinancePage from "./pages/FinancePage";
 import HRPage from "./pages/HRPage";
 import InventoryPage from "./pages/InventoryPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import ProcurementPage from "./pages/ProcurementPage";
 import SalesPage from "./pages/SalesPage";
+
 
 function App() {
   return (
@@ -48,15 +51,31 @@ function App() {
             path="/hr"
             element={<HRPage />}
           />
+
+          <Route
+            path="/notifications"
+            element={<NotificationsPage />}
+          />
+
+          <Route
+            path="/audit-logs"
+            element={<AuditLogsPage />}
+          />
         </Route>
 
         <Route
           path="*"
-          element={<Navigate to="/" replace />}
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
         />
       </Routes>
     </BrowserRouter>
   );
 }
+
 
 export default App;

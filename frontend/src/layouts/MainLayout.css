@@ -25,8 +25,8 @@
 .sidebar-brand span {
   display: block;
   margin-top: 6px;
-  font-size: 12px;
   color: #9ca3af;
+  font-size: 12px;
 }
 
 .sidebar-nav {
@@ -37,6 +37,11 @@
 }
 
 .nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 12px 14px;
   border-radius: 8px;
   color: #d1d5db;
@@ -57,6 +62,20 @@
   color: #ffffff;
 }
 
+.sidebar-notification-count {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .main-content {
   flex: 1;
   min-width: 0;
@@ -73,21 +92,112 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.topbar h1 {
+.topbar-brand-copy h1 {
   margin: 0;
   font-size: 20px;
 }
 
-.topbar p {
+.topbar-brand-copy p {
   margin: 4px 0 0;
-  font-size: 13px;
   color: #6b7280;
+  font-size: 13px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.topbar-notification-button {
+  position: relative;
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.topbar-notification-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.topbar-notification-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topbar-notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
 }
 
 .topbar-user {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-user-avatar {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #3730a3;
   font-size: 14px;
-  color: #374151;
+  font-weight: 700;
+}
+
+.topbar-user-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar-user-details strong {
+  max-width: 160px;
+  overflow: hidden;
+  color: #111827;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-user-details span {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 11px;
 }
 
 .page-content {
@@ -106,6 +216,10 @@
 
   .page-content {
     padding: 24px;
+  }
+
+  .topbar-user-details {
+    display: none;
   }
 }
 
@@ -139,14 +253,34 @@
 
   .topbar {
     min-height: auto;
-    padding: 16px;
+    padding: 14px 16px;
   }
 
-  .topbar p {
+  .topbar-brand-copy p {
     display: none;
+  }
+
+  .topbar-actions {
+    gap: 10px;
   }
 
   .page-content {
     padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar-brand-copy h1 {
+    font-size: 18px;
+  }
+
+  .topbar-user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .topbar-notification-button {
+    width: 38px;
+    height: 38px;
   }
 }

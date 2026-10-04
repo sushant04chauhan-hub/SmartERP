@@ -361,6 +361,9 @@ Frontend features include:
 - Status indicators
 - Analytics charts
 - Real Django REST API data
+- Persistent notifications with unread tracking
+- Notification bell and unread-count indicators
+- Administrative audit-log interface
 
 ---
 
@@ -490,7 +493,7 @@ The project contains automated Django tests covering:
 Current verified backend test suite:
 
 ```text
-162 tests passed
+172 tests passed
 ```
 
 Frontend verification:
@@ -622,7 +625,7 @@ Verified project state:
 
 ```text
 Django system checks: Passed
-Django tests: 162 / 162 Passed
+Django tests: 172 / 172 Passed
 React ESLint: Passed
 React production build: Passed
 ```

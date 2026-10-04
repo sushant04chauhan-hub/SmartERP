@@ -32,11 +32,40 @@ class ApiStatusView(APIView):
 
     def get(self, request):
 
+        profile = getattr(
+            request.user,
+            "profile",
+            None,
+        )
+
+        role = (
+            profile.role
+            if profile
+            else None
+        )
+
+        can_view_audit_logs = (
+            request.user.is_superuser
+            or role in {
+                "ADMIN",
+                "MANAGER",
+            }
+        )
+
         return Response(
             {
                 "status": "ok",
-                "message": "SmartERP API is running.",
+                "message": (
+                    "SmartERP API is running."
+                ),
                 "user": request.user.username,
+                "role": role,
+                "is_superuser": (
+                    request.user.is_superuser
+                ),
+                "can_view_audit_logs": (
+                    can_view_audit_logs
+                ),
             }
         )
 

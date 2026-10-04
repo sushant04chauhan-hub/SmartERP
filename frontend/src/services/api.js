@@ -1,23 +1,86 @@
-async function apiRequest(url, errorMessage) {
-  const response = await fetch(url, {
-    method: "GET",
-    credentials: "include",
-  });
+function getCookie(name) {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) =>
+      row.startsWith(`${name}=`),
+    );
+
+  if (!cookieValue) {
+    return null;
+  }
+
+  return decodeURIComponent(
+    cookieValue.split("=")[1],
+  );
+}
+
+
+async function apiRequest(
+  url,
+  errorMessage,
+  options = {},
+) {
+  const method = (
+    options.method || "GET"
+  ).toUpperCase();
+
+  const headers = {
+    ...(options.headers || {}),
+  };
+
+  const safeMethods = [
+    "GET",
+    "HEAD",
+    "OPTIONS",
+    "TRACE",
+  ];
+
+  if (!safeMethods.includes(method)) {
+    const csrfToken = getCookie(
+      "csrftoken",
+    );
+
+    if (csrfToken) {
+      headers["X-CSRFToken"] = (
+        csrfToken
+      );
+    }
+  }
+
+  const response = await fetch(
+    url,
+    {
+      ...options,
+      method,
+      headers,
+      credentials: "include",
+    },
+  );
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       `${errorMessage} with status ${response.status}`,
     );
+
+    error.status = response.status;
+
+    throw error;
+  }
+
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();
 }
+
 
 function buildListUrl(
   endpoint,
   page,
   search,
   ordering,
+  extraParams = {},
 ) {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -25,10 +88,32 @@ function buildListUrl(
   });
 
   if (search) {
-    params.set("search", search);
+    params.set(
+      "search",
+      search,
+    );
   }
 
-  return `${endpoint}?${params.toString()}`;
+  Object.entries(
+    extraParams,
+  ).forEach(
+    ([key, value]) => {
+      if (
+        value !== ""
+        && value !== null
+        && value !== undefined
+      ) {
+        params.set(
+          key,
+          value,
+        );
+      }
+    },
+  );
+
+  return (
+    `${endpoint}?${params.toString()}`
+  );
 }
 
 
@@ -163,5 +248,75 @@ export async function getDepartments(
       ordering,
     ),
     "Departments request failed",
+  );
+}
+
+
+export async function getNotifications(
+  page = 1,
+  search = "",
+  ordering = "-created_at",
+  unread = "",
+) {
+  return apiRequest(
+    buildListUrl(
+      "/api/notifications/",
+      page,
+      search,
+      ordering,
+      {
+        unread,
+      },
+    ),
+    "Notifications request failed",
+  );
+}
+
+
+export async function getNotificationUnreadCount() {
+  return apiRequest(
+    "/api/notifications/unread-count/",
+    "Unread notification count request failed",
+  );
+}
+
+
+export async function markNotificationRead(
+  notificationId,
+) {
+  return apiRequest(
+    `/api/notifications/${notificationId}/read/`,
+    "Mark notification read request failed",
+    {
+      method: "POST",
+    },
+  );
+}
+
+
+export async function markAllNotificationsRead() {
+  return apiRequest(
+    "/api/notifications/mark-all-read/",
+    "Mark all notifications read request failed",
+    {
+      method: "POST",
+    },
+  );
+}
+
+
+export async function getAuditLogs(
+  page = 1,
+  search = "",
+  ordering = "-created_at",
+) {
+  return apiRequest(
+    buildListUrl(
+      "/api/audit-logs/",
+      page,
+      search,
+      ordering,
+    ),
+    "Audit logs request failed",
   );
 }
