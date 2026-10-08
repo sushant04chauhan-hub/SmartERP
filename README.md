@@ -375,6 +375,8 @@ Frontend features include:
 - Django
 - Django REST Framework
 - PostgreSQL
+- Celery
+- Redis
 
 ### Frontend
 
@@ -396,6 +398,10 @@ Frontend features include:
 - Audit logging
 - Persistent notifications
 - Git and GitHub version control
+- Asynchronous background processing with Celery and Redis
+- Scheduled inventory monitoring with Celery Beat
+- Retry handling for transient database failures
+- Low-stock notification cooldown to prevent repeated alerts
 
 ---
 
@@ -493,7 +499,7 @@ The project contains automated Django tests covering:
 Current verified backend test suite:
 
 ```text
-172 tests passed
+176 tests passed
 ```
 
 Frontend verification:
@@ -625,7 +631,7 @@ Verified project state:
 
 ```text
 Django system checks: Passed
-Django tests: 172 / 172 Passed
+Django tests: 176 / 176 Passed
 React ESLint: Passed
 React production build: Passed
 ```

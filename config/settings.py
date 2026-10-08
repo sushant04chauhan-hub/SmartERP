@@ -153,3 +153,75 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+# Celery
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL",
+    "redis://127.0.0.1:6379/0",
+)
+
+CELERY_RESULT_BACKEND = os.getenv(
+    "CELERY_RESULT_BACKEND",
+    "redis://127.0.0.1:6379/1",
+)
+
+CELERY_ACCEPT_CONTENT = [
+    "json",
+]
+
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_TASK_TRACK_STARTED = True
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+CELERY_TASK_ALWAYS_EAGER = (
+    os.getenv(
+        "CELERY_TASK_ALWAYS_EAGER",
+        "False",
+    ).lower()
+    in (
+        "true",
+        "1",
+        "yes",
+    )
+)
+
+CELERY_TASK_EAGER_PROPAGATES = True
+
+LOW_STOCK_NOTIFICATION_COOLDOWN_HOURS = int(
+    os.getenv(
+        "LOW_STOCK_NOTIFICATION_COOLDOWN_HOURS",
+        "24",
+    )
+)
+
+CELERY_LOW_STOCK_MONITOR_INTERVAL_SECONDS = int(
+    os.getenv(
+        "CELERY_LOW_STOCK_MONITOR_INTERVAL_SECONDS",
+        "300",
+    )
+)
+
+CELERY_BEAT_SCHEDULE = {
+    "monitor-low-stock-products": {
+        "task": (
+            "inventory.tasks."
+            "monitor_low_stock_products"
+        ),
+        "schedule": (
+            CELERY_LOW_STOCK_MONITOR_INTERVAL_SECONDS
+        ),
+    },
+}
+
+CELERY_RESULT_EXPIRES = int(
+    os.getenv(
+        "CELERY_RESULT_EXPIRES",
+        "3600",
+    )
+)

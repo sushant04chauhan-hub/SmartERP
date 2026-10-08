@@ -33,3 +33,7 @@ Thumbs.db
 # Build / cache
 dist/
 build/
+
+# Celery
+celerybeat-schedule*
+celerybeat.pid
